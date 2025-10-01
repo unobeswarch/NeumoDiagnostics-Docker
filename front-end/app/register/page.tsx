@@ -61,7 +61,7 @@ export default function RegisterPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <Activity className="h-8 w-8 text-primary" />
+            <img src="/logo_sin_nombre.svg" alt="Logo" className="h-16 w-16" />
             <span className="text-2xl font-bold text-foreground">NeumoDiagnostics</span>
           </Link>
           <h1 className="text-2xl font-bold text-foreground mb-2">Crear cuenta</h1>

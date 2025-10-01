@@ -1,0 +1,44 @@
+services:
+
+  businesslogic-db:
+    image: postgres:15
+    container_name: businesslogic-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: blogic_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  business-logic-be:
+    build: ./businesslogic
+    container_name:  business-logic-be
+    ports:
+      - "8080:8080"
+    depends_on:
+      - businesslogic-db
+
+  prediagnostic-db:
+    image: mongo
+    restart: always
+    container_name: prediagnostic-db
+    ports:
+      - "27017:27017"
+
+  prediagnostic-be:
+    build: ./prediagnostic
+    container_name: prediagnostic-be
+    ports:
+      - "8000:8000"
+    depends_on:
+      - prediagnostic-db
+
+  front-end:
+    build: ./front-end
+    container_name: front-end
+    ports:
+      - "3000:3000"
+      

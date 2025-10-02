@@ -5,7 +5,7 @@ const nextConfig = {
     return [
       {
         source: '/api/graphql',
-        destination: 'http://localhost:8080/graphql',
+        destination: 'http://business-logic-be:8080/graphql',
       },
     ];
   },

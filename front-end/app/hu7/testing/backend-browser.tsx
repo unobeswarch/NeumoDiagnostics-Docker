@@ -154,7 +154,7 @@ export function BackendCaseBrowser({ onCaseSelect }: BackendCaseBrowserProps) {
             </Button>
             
             <div className="text-sm text-gray-600">
-              Connects to: <code className="bg-gray-100 px-2 py-1 rounded">localhost:8080/query</code>
+              Connects to: <code className="bg-gray-100 px-2 py-1 rounded">business-logic-be:8080/query</code>
             </div>
           </div>
 

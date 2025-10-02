@@ -20,7 +20,7 @@ REM pip install -r requirements.txt
 
 REM Run the server
 echo Starting server on port 8000...
-echo Access the API documentation at: http://localhost:8000/docs
+echo Access the API documentation at: http://prediagnostic-be:8000/docs
 echo.
 python cmd\server.py
 

@@ -31,7 +31,7 @@ func main() {
 
 	writer.Close()
 
-	req, _ := http.NewRequest("POST", "http://localhost:8080/query", body)
+	req, _ := http.NewRequest("POST", "http://business-logic-be:8080/query", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImNvcnJlbzNAZXhhbXBsZS5jb20iLCJleHAiOjE3NTkxMzcwNzcsImlkX3VzdWFyaW8iOjEsInJvbCI6InBhY2llbnRlIn0.wezrS7S9f2OFKNb-wjyidIkJIjMkMhm8S0K0mZIcg1s")
 

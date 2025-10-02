@@ -46,11 +46,11 @@ I recommend you to create a venv and install the dependencies there.
    python cmd/server.py
    ```
    
-   The server will start on `http://localhost:8000`
+   The server will start on `http://prediagnostic-be:8000`
 
 3. **Access API Documentation**
-   - Swagger UI: `http://localhost:8000/docs`
-   - ReDoc: `http://localhost:8000/redoc`
+   - Swagger UI: `http://prediagnostic-be:8000/docs`
+   - ReDoc: `http://prediagnostic-be:8000/redoc`
 
 ### Docker Deployment
 
@@ -107,13 +107,13 @@ POST /api/v1/predict
 import requests
 
 # Health check
-response = requests.get("http://localhost:8000/api/v1/health")
+response = requests.get("http://prediagnostic-be:8000/api/v1/health")
 print(response.json())
 
 # Make prediction
 with open("chest_xray.jpg", "rb") as f:
     files = {"file": f}
-    response = requests.post("http://localhost:8000/api/v1/predict", files=files)
+    response = requests.post("http://prediagnostic-be:8000/api/v1/predict", files=files)
     result = response.json()
     print(f"Prediction: {result['predicted_class']} (confidence: {result['confidence']:.2f})")
 ```
@@ -121,10 +121,10 @@ with open("chest_xray.jpg", "rb") as f:
 ### cURL
 ```bash
 # Health check
-curl http://localhost:8000/api/v1/health
+curl http://prediagnostic-be:8000/api/v1/health
 
 # Make prediction
-curl -X POST "http://localhost:8000/api/v1/predict" \
+curl -X POST "http://prediagnostic-be:8000/api/v1/predict" \
      -H "accept: application/json" \
      -H "Content-Type: multipart/form-data" \
      -F "file=@chest_xray.jpg"

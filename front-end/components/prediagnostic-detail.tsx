@@ -105,7 +105,7 @@ export function PreDiagnosticDetail({ prediagnosticId }: PreDiagnosticDetailProp
             const filename = pathParts[pathParts.length - 1] // Get the last part (filename)
             
             // Construct URL using the Python service image endpoint
-            imageUrl = `http://localhost:8000/prediagnostic/image/${filename}`
+            imageUrl = `http://prediagnostic-be:8000/prediagnostic/image/${filename}`
             console.log(`🖼️ Constructed image URL: ${imageUrl} from path: ${backendData.urlrad}`)
           }
           

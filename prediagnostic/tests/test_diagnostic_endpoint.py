@@ -23,7 +23,7 @@ from src.services.diagnostic_service import diagnostic_service
 class TestDiagnosticEndpoint:
     """Simplified test suite for HU5 diagnostic endpoint."""
     
-    BASE_URL = "http://localhost:8000"
+    BASE_URL = "http://prediagnostic-be:8000"
 
     @pytest.mark.asyncio
     async def test_mongodb_connection(self):
@@ -72,8 +72,8 @@ class TestDiagnosticEndpoint:
             assert response.status_code in [200, 400, 404, 422, 500]
             
         except requests.exceptions.ConnectionError:
-            pytest.skip("Server not running on localhost:8000")
-    
+            pytest.skip("Server not running on http://prediagnostic-be:8000")
+
     def test_diagnostic_endpoint_validation(self):
         """Test validation errors for diagnostic endpoint."""
         import requests
@@ -97,8 +97,8 @@ class TestDiagnosticEndpoint:
             assert "detail" in data
             
         except requests.exceptions.ConnectionError:
-            pytest.skip("Server not running on localhost:8000")
-    
+            pytest.skip("Server not running on http://prediagnostic-be:8000")
+
     @pytest.mark.asyncio
     async def test_diagnostic_service_methods(self):
         """Test diagnostic service methods and error handling."""

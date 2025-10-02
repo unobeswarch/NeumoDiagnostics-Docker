@@ -101,7 +101,7 @@ func (s *CaseService) processAndStandardizeCase(rawCase map[string]interface{}) 
 		pathParts := strings.Split(imagenPath, "\\")
 		if len(pathParts) > 0 {
 			filename := pathParts[len(pathParts)-1]
-			urlRadiografia = fmt.Sprintf("http://localhost:8000/prediagnostic/image/%s", filename)
+			urlRadiografia = fmt.Sprintf("http://http://prediagnostic-be:8000/prediagnostic/image/%s", filename)
 		} else {
 			urlRadiografia = "/placeholder-radiography.jpg"
 		}
@@ -287,7 +287,7 @@ func (s *CaseService) GetCaseDetail(caseID, userID string) (*model.CaseDetail, e
 		pathParts := strings.Split(radiografiaRuta, "\\")
 		if len(pathParts) > 0 {
 			filename := pathParts[len(pathParts)-1]
-			urlRadiografia = fmt.Sprintf("http://localhost:8000/prediagnostic/image/%s", filename)
+			urlRadiografia = fmt.Sprintf("http://prediagnostic-be:8000/prediagnostic/image/%s", filename)
 		}
 	}
 

@@ -25,7 +25,7 @@ func main() {
 	// URL del servicio de prediagnóstico (configurable por variable de entorno)
 	prediagnosticURL := os.Getenv("PREDIAGNOSTIC_SERVICE_URL")
 	if prediagnosticURL == "" {
-		prediagnosticURL = "http://localhost:8000" // URL por defecto
+		prediagnosticURL = "http://prediagnostic-be:8000" // URL por defecto
 	}
 
 	// Instanciamos los services

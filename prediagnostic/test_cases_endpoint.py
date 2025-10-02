@@ -113,7 +113,7 @@ async def create_test_data():
 async def test_cases_endpoint():
     """Test the new GET /prediagnostic/cases endpoint"""
     
-    base_url = "http://localhost:8000"
+    base_url = "http://prediagnostic-be:8000"
     
     print("🧪 Testing HU3 Implementation: GET /prediagnostic/cases")
     print("=" * 60)

@@ -89,7 +89,7 @@ func (r *mutationResolver) UploadImage(ctx context.Context, imagen graphql.Uploa
 
 	writer.Close()
 
-	req, err := http.NewRequest("POST", "http://localhost:8000/prediagnostic/process", body)
+	req, err := http.NewRequest("POST", "http://prediagnostic-be:8000/prediagnostic/process", body)
 	if err != nil {
 		return false, err
 	}

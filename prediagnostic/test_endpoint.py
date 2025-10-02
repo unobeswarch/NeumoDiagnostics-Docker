@@ -49,7 +49,7 @@ async def create_test_case():
 async def test_endpoint():
     """Test the HTTP endpoint /prediagnostic/case/{prediagnostico_id}"""
     
-    base_url = "http://localhost:8000"  # Default FastAPI port
+    base_url = "http://prediagnostic-be:8000"  # Default FastAPI port
     
     print("🧪 Testing HTTP Endpoint: /prediagnostic/case/{prediagnostico_id}")
     print("=" * 65)

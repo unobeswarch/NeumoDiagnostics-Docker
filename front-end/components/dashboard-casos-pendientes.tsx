@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,6 +15,7 @@ import {
   CheckCircle,
   XCircle,
   Construction,
+  ChevronRight,
 } from "lucide-react"
 import { CasesService, type Case } from "@/lib/cases-service"
 
@@ -22,6 +24,7 @@ export function DashboardCasosPendientes() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isUsingMockData, setIsUsingMockData] = useState(false)
+  const router = useRouter()
 
   // Mock data for development when backend is not available
   const mockCases: Case[] = [
@@ -65,16 +68,35 @@ export function DashboardCasosPendientes() {
     setError(null)
 
     try {
-      console.log("🔍 Attempting to fetch cases from backend...")
+      console.log("🔍 Attempting to fetch cases from Python backend...")
 
-      // Try to fetch from the real backend first
-      const backendCases = await CasesService.getCases()
+      // Fetch from Python service directly instead of CasesService
+      const response = await fetch("http://localhost:8000/prediagnostic/cases")
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const pythonCases = await response.json()
+      console.log("✅ Cases fetched from Python backend:", pythonCases)
 
-      console.log("✅ Cases fetched from backend:", backendCases)
-      setCases(backendCases)
+      // Transform Python data to Case interface
+      const transformedCases: Case[] = pythonCases.map((item: any) => ({
+        id: item.id,
+        patientId: item.paciente,
+        caseDate: item.fecha,
+        currentStatus: item.estado,
+        patientName: `Paciente ${item.paciente}`,
+        aiDiagnosis: "Pendiente análisis",
+        aiConfidence: 0,
+        urgency: "routine" as const,
+        imageUrl: ""
+      }))
+
+      setCases(transformedCases)
       setIsUsingMockData(false)
     } catch (error) {
-      console.log("⚠️ Backend not available, using mock data:", error)
+      console.log("⚠️ Python backend not available, using mock data:", error)
 
       // Fallback to mock data
       setCases(mockCases)
@@ -94,7 +116,17 @@ export function DashboardCasosPendientes() {
   }
 
   const formatDate = (dateString: string): string => {
-    return CasesService.formatDate(dateString)
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  const getUrgencyLevel = (caseItem: Case): "urgent" | "routine" => {
+    return caseItem.urgency || "routine"
   }
 
   const getBadgeColor = (status: string): string => {
@@ -110,15 +142,22 @@ export function DashboardCasosPendientes() {
     }
   }
 
-  const availableCases = cases.filter((c) => CasesService.getUrgencyLevel(c) !== "urgent")
-  const urgentCases = cases.filter((c) => CasesService.getUrgencyLevel(c) === "urgent")
+  const availableCases = cases.filter((c) => getUrgencyLevel(c) !== "urgent")
+  const urgentCases = cases.filter((c) => getUrgencyLevel(c) === "urgent")
 
   const CaseCard = ({ case: caseData }: { case: Case }) => {
     const isUrgent = CasesService.getUrgencyLevel(caseData) === "urgent"
     const badgeColor = getBadgeColor(caseData.currentStatus)
 
+    const handleCaseClick = () => {
+      router.push(`/doctor/cases/${caseData.id}`)
+    }
+
     return (
-      <div className="flex items-center justify-between p-4 bg-background rounded-lg border border-border hover:bg-accent transition-colors cursor-pointer">
+      <div 
+        className="flex items-center justify-between p-4 bg-background rounded-lg border border-border hover:bg-accent hover:shadow-md transition-all cursor-pointer group"
+        onClick={handleCaseClick}
+      >
         <div className="flex items-center gap-4">
           <div
             className={`w-12 h-12 rounded-lg flex items-center justify-center ${
@@ -142,14 +181,17 @@ export function DashboardCasosPendientes() {
             )}
           </div>
         </div>
-        <div className="text-right space-y-2">
-          <div className="flex gap-2">
-            <Badge className={badgeColor}>{caseData.currentStatus}</Badge>
-            <Badge variant={isUrgent ? "destructive" : "secondary"}>{isUrgent ? "Urgente" : "Rutina"}</Badge>
+        <div className="flex items-center gap-3">
+          <div className="text-right space-y-2">
+            <div className="flex gap-2">
+              <Badge className={badgeColor}>{caseData.currentStatus}</Badge>
+              <Badge variant={isUrgent ? "destructive" : "secondary"}>{isUrgent ? "Urgente" : "Rutina"}</Badge>
+            </div>
+            {caseData.aiConfidence && (
+              <div className="text-sm text-muted-foreground">Confianza: {(caseData.aiConfidence * 100).toFixed(1)}%</div>
+            )}
           </div>
-          {caseData.aiConfidence && (
-            <div className="text-sm text-muted-foreground">Confianza: {(caseData.aiConfidence * 100).toFixed(1)}%</div>
-          )}
+          <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
         </div>
       </div>
     )

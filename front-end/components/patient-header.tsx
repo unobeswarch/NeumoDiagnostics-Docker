@@ -36,10 +36,12 @@ export function PatientHeader() {
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={user?.avatar || "/patient-avatar.png"} alt="Patient" />
                     <AvatarFallback>
-                      {user?.name
-                        ?.split(" ")
-                        .map((n) => n[0])
-                        .join("") || "JD"}
+                      {user?.name && typeof user.name === 'string'
+                        ? user.name.split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()
+                        : "JP"}
                     </AvatarFallback>
                   </Avatar>
                 </Button>

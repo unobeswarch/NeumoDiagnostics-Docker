@@ -23,9 +23,9 @@ func main() {
 	}
 
 	// URL del servicio de prediagnóstico (configurable por variable de entorno)
-	prediagnosticURL := "" //os.Getenv("PREDIAGNOSTIC_SERVICE_URL")
+	prediagnosticURL := os.Getenv("PREDIAGNOSTIC_SERVICE_URL")
 	if prediagnosticURL == "" {
-		prediagnosticURL = "http://prediagnostic-be:8000" // URL por defecto
+		prediagnosticURL = "http://localhost:8000" // URL por defecto
 	}
 
 	// Instanciamos los services
@@ -75,7 +75,6 @@ func main() {
 	http.Handle("/register", authMiddleware(http.HandlerFunc(handlers.HandlerRegistrarUsuario)))
 	http.Handle("/auth", authMiddleware(http.HandlerFunc(handlers.HandlerIniciarSesion)))
 	http.Handle("/validation", authMiddleware(http.HandlerFunc(handlers.HandlerValidacion)))
-	http.Handle("/businesslogic/cases", authMiddleware(srv))
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Printf("prediagnostic service URL: %s", prediagnosticURL)

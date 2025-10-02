@@ -13,6 +13,7 @@ interface RadiographyRecord {
   fecha_subida: string
   estado: "subido" | "procesado" | "validado"
   resultado_preliminar?: string | null
+  imageUrl?: string
 }
 
 interface RadiographyHistoryProps {
@@ -79,6 +80,7 @@ export function RadiographyHistory({ records, onSelectRecord }: RadiographyHisto
           <table className="min-w-full text-sm text-left">
             <thead>
               <tr className="border-b border-border">
+                <th className="px-4 py-2">Vista previa</th>
                 <th className="px-4 py-2">ID</th>
                 <th className="px-4 py-2">Fecha de subida</th>
                 <th className="px-4 py-2">Estado</th>
@@ -89,7 +91,7 @@ export function RadiographyHistory({ records, onSelectRecord }: RadiographyHisto
             <tbody>
               {filteredRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-8">
+                  <td colSpan={6} className="text-center py-8">
                     <FileImage className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground">No se encontraron radiografías</p>
                   </td>
@@ -101,6 +103,24 @@ export function RadiographyHistory({ records, onSelectRecord }: RadiographyHisto
                     className="border-b border-border hover:bg-accent cursor-pointer transition-colors"
                     onClick={() => onSelectRecord(record)}
                   >
+                    <td className="px-4 py-2">
+                      <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                        {record.imageUrl && record.imageUrl !== "/placeholder.jpg" ? (
+                          <img 
+                            src={record.imageUrl} 
+                            alt={`Radiografía ${record.radiografia_id}`}
+                            className="w-full h-full object-cover rounded-lg"
+                            onError={(e) => {
+                              // Fallback to icon if image fails to load
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              target.nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                        <FileImage className={`h-5 w-5 text-muted-foreground ${record.imageUrl && record.imageUrl !== "/placeholder.jpg" ? 'hidden' : ''}`} />
+                      </div>
+                    </td>
                     <td className="px-4 py-2 font-medium text-card-foreground">{record.radiografia_id}</td>
                     <td className="px-4 py-2">{new Date(record.fecha_subida).toLocaleDateString()}</td>
                     <td className="px-4 py-2">

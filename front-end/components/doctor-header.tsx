@@ -56,10 +56,9 @@ export function DoctorHeader() {
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={user?.avatar || "/doctor-avatar.png"} alt="Doctor" />
                     <AvatarFallback>
-                      {user?.name
-                        ?.split(" ")
-                        .map((n) => n[0])
-                        .join("") || "SJ"}
+                      {user?.name && typeof user.name === 'string'
+                        ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase()
+                        : "DR"}
                     </AvatarFallback>
                   </Avatar>
                 </Button>

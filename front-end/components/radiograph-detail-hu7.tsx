@@ -155,157 +155,166 @@ export function RadiographDetailHU7({ caseId }: RadiographDetailHU7Props) {
   const { caseDetail } = data
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header Section - matching mockup design */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Detalle de Radiografía</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Descargar Resultados
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column - Radiograph Image */}
-          <div className="space-y-6">
-            <Card className="shadow-sm">
-              <CardContent className="p-6">
-                <div className="aspect-square bg-black rounded-lg overflow-hidden">
-                  {caseDetail.urlImagen ? (
-                    <img 
-                      src={caseDetail.urlImagen} 
-                      alt="Radiografía pulmonar"
-                      className="w-full h-full object-contain"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <div className="text-white/60 text-center">
-                        <svg className="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <p className="text-sm">Imagen no disponible</p>
-                      </div>
+    <div className="h-[80vh] bg-gray-50 overflow-hidden rounded-lg">
+      {/* Main content - full width layout */}
+      <div className="h-full w-full px-6 py-4">
+        {/* Full width two column layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 h-full">
+          {/* Left Column - Radiograph Image (3/5 width) */}
+          <div className="lg:col-span-3 h-full">
+            <div className="bg-black rounded-xl overflow-hidden shadow-lg h-full">
+              <div className="h-full bg-black flex items-center justify-center">
+                {caseDetail.urlImagen ? (
+                  <img 
+                    src={caseDetail.urlImagen} 
+                    alt="Radiografía pulmonar"
+                    className="max-w-full max-h-full object-contain"
+                    onError={(e) => {
+                      console.error("❌ Failed to load HU7 image:", caseDetail.urlImagen);
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const parent = target.parentElement;
+                      if (parent) {
+                        parent.innerHTML = `
+                          <div class="w-full h-full flex items-center justify-center">
+                            <div class="text-white/60 text-center">
+                              <svg class="mx-auto h-16 w-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              <p class="text-sm">Error cargando imagen</p>
+                            </div>
+                          </div>
+                        `;
+                      }
+                    }}
+                    onLoad={() => {
+                      console.log("✅ HU7 Image loaded successfully:", caseDetail.urlImagen);
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="text-white/60 text-center">
+                      <svg className="mx-auto h-16 w-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm">Imagen no disponible</p>
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Right Column - Patient Info and Details */}
-          <div className="space-y-6">
+          {/* Right Column - Patient Info and Results (2/5 width) */}
+          <div className="lg:col-span-2 h-full overflow-y-auto">
+            <div className="space-y-4 pr-2">
             {/* Patient Information */}
-            <Card className="shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold text-gray-900">Información del Paciente</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Nombre</label>
-                    <p className="text-base font-medium text-gray-900">{user?.name || 'Paciente'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">ID Paciente</label>
-                    <p className="text-base text-gray-900">{caseDetail.preDiagnostic.pacienteId}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Fecha de Nacimiento</label>
-                    <p className="text-base text-gray-900">25 de Agosto, 1985</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Sexo</label>
-                    <p className="text-base text-gray-900">Femenino</p>
-                  </div>
+            <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">Información del Paciente</h2>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Nombre</span>
+                  <span className="text-sm font-medium text-gray-900">{user?.name || 'Paciente'}</span>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">ID Paciente</span>
+                  <span className="text-sm font-medium text-gray-900">{caseDetail.preDiagnostic.pacienteId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Fecha de Nacimiento</span>
+                  <span className="text-sm font-medium text-gray-900">25 de Agosto, 1985</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Sexo</span>
+                  <span className="text-sm font-medium text-gray-900">Femenino</span>
+                </div>
+              </div>
+            </div>
 
             {/* Diagnosis Details */}
-            <Card className="shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold text-gray-900">Detalles del Diagnóstico</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Fecha de Radiografía</label>
-                    <p className="text-base text-gray-900">{formatDate(caseDetail.fechaSubida)}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Fecha de Diagnóstico</label>
-                    <p className="text-base text-gray-900">
-                      {caseDetail.diagnostic ? formatDate(caseDetail.diagnostic.fechaRevision) : 'Pendiente'}
-                    </p>
-                  </div>
+            <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">Detalles del Diagnóstico</h2>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Fecha de Radiografía</span>
+                  <span className="text-sm font-medium text-gray-900">{formatDate(caseDetail.fechaSubida)}</span>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Fecha de Diagnóstico</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {caseDetail.diagnostic ? formatDate(caseDetail.diagnostic.fechaRevision) : 'Pendiente'}
+                  </span>
+                </div>
+              </div>
+            </div>
 
             {/* AI Analysis Results - matching mockup style */}
-            <Card className="shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold text-gray-900">Resultado</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      </div>
-                      <div>
-                        <h3 className="text-base font-semibold text-gray-900">{caseDetail.preDiagnostic.resultadosModelo.etiqueta}</h3>
-                        <p className="text-sm text-gray-500">Confirmado por IA</p>
-                      </div>
+            <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">Resultado</h2>
+              
+              <div className={`p-4 rounded-lg ${
+                caseDetail.preDiagnostic.resultadosModelo.etiqueta === "No Pneumonia" 
+                  ? "bg-green-50 border border-green-200" 
+                  : "bg-blue-50 border border-blue-200"
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      caseDetail.preDiagnostic.resultadosModelo.etiqueta === "No Pneumonia"
+                        ? "bg-green-100"
+                        : "bg-blue-100"
+                    }`}>
+                      <svg className={`w-6 h-6 ${
+                        caseDetail.preDiagnostic.resultadosModelo.etiqueta === "No Pneumonia"
+                          ? "text-green-600"
+                          : "text-blue-600"
+                      }`} fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
                     </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-blue-600">
-                        {Math.round(caseDetail.preDiagnostic.resultadosModelo.probNeumonia * 100)}%
-                      </div>
-                      <div className="text-sm text-gray-500">Probabilidad</div>
+                    <div>
+                      <h3 className={`text-lg font-bold ${
+                        caseDetail.preDiagnostic.resultadosModelo.etiqueta === "No Pneumonia"
+                          ? "text-green-700"
+                          : "text-blue-700"
+                      }`}>
+                        {caseDetail.preDiagnostic.resultadosModelo.etiqueta === "No Pneumonia" ? "No Pneumonia" : "Neumonía"}
+                      </h3>
+                      <p className="text-sm text-gray-600">Confirmado por IA</p>
                     </div>
                   </div>
+                  <div className="text-right">
+                    <div className={`text-3xl font-bold ${
+                      caseDetail.preDiagnostic.resultadosModelo.etiqueta === "No Pneumonia"
+                        ? "text-green-600"
+                        : "text-blue-600"
+                    }`}>
+                      {Math.round((caseDetail.preDiagnostic.resultadosModelo.etiqueta === "No Pneumonia" ? 
+                        (1 - caseDetail.preDiagnostic.resultadosModelo.probNeumonia) : 
+                        caseDetail.preDiagnostic.resultadosModelo.probNeumonia) * 100)}%
+                    </div>
+                    <div className="text-xs text-gray-500 uppercase tracking-wide">Probabilidad</div>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Medical Comments Section */}
             {caseDetail.diagnostic && (
-              <Card className="shadow-sm">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-lg font-semibold text-gray-900">Comentarios del Médico</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <p className="text-gray-800 italic leading-relaxed">
-                      "{caseDetail.diagnostic.comentarios}"
-                    </p>
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <div className="flex justify-between items-center text-sm text-gray-600">
-                        <span>- {caseDetail.diagnostic.doctorNombre || 'Dr. Carlos Vega'}</span>
-                        <span>{formatDate(caseDetail.diagnostic.fechaRevision)}</span>
-                      </div>
-                    </div>
+              <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
+                <h2 className="text-lg font-semibold text-gray-900 mb-3">Comentarios del Médico</h2>
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <p className="text-gray-700 italic leading-relaxed text-sm mb-4">
+                    "{caseDetail.diagnostic.comentarios}"
+                  </p>
+                  <div className="flex justify-between items-center text-xs text-gray-500 pt-3 border-t border-gray-200">
+                    <span className="font-medium">- {caseDetail.diagnostic.doctorNombre || 'Dr. Carlos Vega'}</span>
+                    <span>{formatDate(caseDetail.diagnostic.fechaRevision)}</span>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )}
+            </div>
           </div>
         </div>
       </div>

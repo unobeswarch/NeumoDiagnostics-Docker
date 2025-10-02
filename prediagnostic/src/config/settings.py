@@ -26,7 +26,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Disable GPU by default
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
 # MongoDB Configuration
-MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://prediagnostic-db:27017")
+MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "prediagnostic_db")
 
 # Collection names matching real schema

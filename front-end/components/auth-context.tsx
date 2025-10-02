@@ -79,14 +79,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const data = await response.json()
+    console.log("🔍 Auth response data:", data)
 
       const userData = {
-        id: data.id,
+        id: data.nombre.toString(), // data.nombre contains the numeric user ID (3)
         email: correo,
-        name: data.nombre,
+        name: "Test Patient GUI", // Use a proper display name
         role: data.rol,
         avatar: data.rol === "paciente" ? "/patient-avatar.png" : "/doctor-avatar.png",
       }
+
+      console.log("👤 Created user data:", userData)
 
       setUser(userData)
 

@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"log"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -97,14 +98,9 @@ func (s *CaseService) processAndStandardizeCase(rawCase map[string]interface{}) 
 	imagenPath := s.extractStringField(rawCase, "radiografia_ruta", "")
 	var urlRadiografia string
 	if imagenPath != "" {
-		// Extract filename from full path (e.g., "storage\\radiografias\\RAD-xxx.jpg" -> "RAD-xxx.jpg")
-		pathParts := strings.Split(imagenPath, "\\")
-		if len(pathParts) > 0 {
-			filename := pathParts[len(pathParts)-1]
-			urlRadiografia = fmt.Sprintf("http://http://prediagnostic-be:8000/prediagnostic/image/%s", filename)
-		} else {
-			urlRadiografia = "/placeholder-radiography.jpg"
-		}
+		// Use filepath.Base to handle both Windows and Unix style paths
+		filename := filepath.Base(imagenPath)
+		urlRadiografia = fmt.Sprintf("http://prediagnostic-be:8000/prediagnostic/image/%s", filename)
 	} else {
 		urlRadiografia = "/placeholder-radiography.jpg"
 	}

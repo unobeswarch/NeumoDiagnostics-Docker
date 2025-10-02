@@ -82,9 +82,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("🔍 Auth response data:", data)
 
       const userData = {
-        id: data.nombre.toString(), // data.nombre contains the numeric user ID (3)
+        id: data.id, // data.nombre contains the numeric user ID (3)
         email: correo,
-        name: "Test Patient GUI", // Use a proper display name
+        name: data.nombre.toString(), // Use a proper display name
         role: data.rol,
         avatar: data.rol === "paciente" ? "/patient-avatar.png" : "/doctor-avatar.png",
       }

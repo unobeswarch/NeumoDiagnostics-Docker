@@ -98,7 +98,7 @@ func HandlerIniciarSesion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nombre, id, rol, token, err := services.IniciarSesion(datos["correo"].(string), datos["contrasena"].(string))
+	nombre, id, correo, rol, token, err := services.IniciarSesion(datos["correo"].(string), datos["contrasena"].(string))
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -115,7 +115,7 @@ func HandlerIniciarSesion(w http.ResponseWriter, r *http.Request) {
 		"token":   token,
 		"rol":     rol,
 		"user_id": id,
-		"correo":  datos["correo"].(string),
+		"correo":  correo,
 	})
 }
 

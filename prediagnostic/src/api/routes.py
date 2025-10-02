@@ -30,7 +30,8 @@ logger = logging.getLogger(__name__)
 # Create router
 router = APIRouter()
 
-STORAGE_DIR = Path("storage/radiografias")
+from os import getenv 
+STORAGE_DIR = Path(getenv("PREDIAGNOSTIC_STORAGE_DIR", "storage/radiografias"))
 STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 @router.post("/diagnostic/{prediagnostic_id}", response_model=Dict[str, Any])

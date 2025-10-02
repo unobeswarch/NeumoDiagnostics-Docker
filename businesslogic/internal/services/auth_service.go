@@ -29,7 +29,7 @@ func RegistrarUsuario(u models.User) (int, time.Time, error) {
 		return 0, time.Time{}, ErrTratamientoDatos
 	}
 
-	db, err := sql.Open("postgres", "host=prediagnostic-db port=5432 user=postgres password=BDatosPost0912+ dbname=blogic_db sslmode=disable")
+	db, err := sql.Open("postgres", "host=businesslogic-db port=5432 user=postgres password=123 dbname=blogic_db sslmode=disable")
 	// Si falla, probar con URL encoding (línea comentada abajo)
 	// db, err := sql.Open("postgres", "postgres://postgres:BDatosPost0912%2B@localhost:5432/blogic_db?sslmode=disable")
 	// Original password (comentada):
@@ -80,12 +80,12 @@ func RegistrarUsuario(u models.User) (int, time.Time, error) {
 	return id, fechaCreacion, nil
 }
 
-func IniciarSesion(correo string, contrasena string) (int, string, string, string, error) {
-	db, err := sql.Open("postgres", "host=prediagnostic-db port=5432 user=postgres password=BDatosPost0912+ dbname=blogic_db sslmode=disable")
+func IniciarSesion(correo string, contrasena string) (string, int, string, string, string, error) {
+	db, err := sql.Open("postgres", "host=businesslogic-db port=5432 user=postgres password=123 dbname=blogic_db sslmode=disable")
 	// Original:
 	// db, err := sql.Open("postgres", "postgres://postgres:123@localhost:5432/blogic_db?sslmode=disable")
 	if err != nil {
-		return 0, "", "", "", err
+		return "", 0, "", "", "", err
 	}
 	defer db.Close()
 
@@ -102,13 +102,13 @@ func IniciarSesion(correo string, contrasena string) (int, string, string, strin
 	err = db.QueryRow(query, correo).Scan(&nombre_completo, &id_usuario, &correo_usuario, &contrasena_usuario, &rol_usuario)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return 0, "", "", "", fmt.Errorf("usuario no encontrado")
+			return "", 0, "", "", "", fmt.Errorf("usuario no encontrado")
 		}
-		return 0, "", "", "", err
+		return "", 0, "", "", "", err
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(contrasena_usuario), []byte(contrasena))
 	if err != nil {
-		return 0, "", "", "", err
+		return "", 0, "", "", "", err
 	}
 
 	var auth AuthService = AuthService{
@@ -125,10 +125,10 @@ func IniciarSesion(correo string, contrasena string) (int, string, string, strin
 
 	tokenString, err := token.SignedString(auth.key)
 	if err != nil {
-		return 0, "", "", "", err
+		return "", 0, "", "", "", err
 	}
 
-	return id_usuario, correo_usuario, rol_usuario, tokenString, nil
+	return nombre_completo, id_usuario, correo_usuario, rol_usuario, tokenString, nil
 }
 
 type AuthService struct {
@@ -149,7 +149,7 @@ func NewAuthService() *AuthService {
 // UserExists verifica si el usuario existe en la base de datos relacional
 func (s *AuthService) UserExists(ctx context.Context, userID string) (bool, error) {
 	// Intentar primera con connection string sin URL encoding
-	db, err := sql.Open("postgres", "host=prediagnostic-db port=5432 user=postgres password=BDatosPost0912+ dbname=blogic_db sslmode=disable")
+	db, err := sql.Open("postgres", "host=businesslogic-db port=5432 user=postgres password=123 dbname=blogic_db sslmode=disable")
 	// Si falla, probar con URL encoding (línea comentada abajo)
 	// db, err := sql.Open("postgres", "postgres://postgres:BDatosPost0912%2B@localhost:5432/blogic_db?sslmode=disable")
 	// Original password (comentada):

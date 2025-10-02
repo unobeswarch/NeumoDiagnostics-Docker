@@ -71,7 +71,7 @@ export function DashboardCasosPendientes() {
       console.log("🔍 Attempting to fetch cases from Python backend...")
 
       // Fetch from Python service directly instead of CasesService
-      const response = await fetch("http://prediagnostic-be:8000/prediagnostic/cases")
+      const response = await fetch("http://localhost:8000/prediagnostic/cases")
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)

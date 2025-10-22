@@ -1,26 +1,25 @@
 services:
 
-  businesslogic-db:
+  auth-db:
     image: postgres:15
-    container_name: businesslogic-db
+    container_name: auth-db
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 123
-      POSTGRES_DB: blogic_db
+      POSTGRES_DB: auth_db
     ports:
       - "5432:5432"
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./inicializacion_auth_db.sql:/docker-entrypoint-initdb.d/inicializacion_auth_db.sql
 
-  business-logic-be:
-    build: ./businesslogic
-    container_name:  business-logic-be
+  message-broker:
+    image: rabbitmq:3-management
+    container_name: message-broker
     ports:
-      - "8080:8080"
-    depends_on:
-      - businesslogic-db
-
+      - "5672:5672"
+      - "15672:15672"
+  
   prediagnostic-db:
     image: mongo
     restart: always
@@ -28,17 +27,49 @@ services:
     ports:
       - "27017:27017"
 
+  api-gateway:
+    build: ./api-gateway
+    container_name:  api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-db
+
   prediagnostic-be:
-    build: ./prediagnostic
+    build: ./prediagnostic-be
     container_name: prediagnostic-be
     ports:
       - "8000:8000"
     depends_on:
       - prediagnostic-db
 
-  front-end:
-    build: ./front-end
-    container_name: front-end
+  web-front-end:
+    build: ./web-front-end
+    container_name: web-front-end
     ports:
       - "3000:3000"
+
+  auth-be:
+    build: ./auth-be
+    container_name: auth-be
+    ports:
+      - "8081:8081"
+
+  cli-front-end:
+    build: ./cli-front-end
+    container_name: cli-front-end
+
+  message-producer:
+    build: ./message-producer
+    container_name: message-producer
+    ports:
+      - "8082:8082"
+
+  notification-be:
+    build: ./notification-be
+    container_name: notification-be
+    env_file:
+      - ./notification-be/.env
+    ports:
+      - "8003:8003"
       

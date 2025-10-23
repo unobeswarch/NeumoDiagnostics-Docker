@@ -10,9 +10,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY . .
 
-COPY Cargo.toml Cargo.lock ./
-RUN cargo fetch
-
 RUN cargo build --release
 
 CMD [ "bash" ]

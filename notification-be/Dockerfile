@@ -29,5 +29,5 @@ RUN useradd -m -u 1000 appuser && \
 USER appuser
 
 # Default command (can be overridden in docker-compose)
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8003"]
+CMD ["python", "app/worker.py"]
 

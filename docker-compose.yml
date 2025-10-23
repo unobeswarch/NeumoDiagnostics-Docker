@@ -31,6 +31,8 @@ services:
   notification-be:
     build: ./notification-be
     container_name: notification-be
+    env_file:
+      - ./notification-be/.env
     depends_on:
       message-broker:
         condition: service_healthy

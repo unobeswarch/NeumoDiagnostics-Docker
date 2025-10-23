@@ -27,12 +27,15 @@ func NewRabbitMQClient(amqpURL, queueName string) (*RabbitMQClient, error) {
 	}
 
 	queue, err := channel.QueueDeclare(
-		queueName, //name
-		true,      //durable
-		false,     //delete when unused
-		false,     //exclusive
-		false,     //no wait
-		nil,       //arguments
+		"diagnostic_notifications",
+		true,
+		false,
+		false,
+		false,
+		amqp091.Table{
+			"x-dead-letter-exchange":    "",
+			"x-dead-letter-routing-key": "diagnostic_notifications_dlq",
+		},
 	)
 
 	if err != nil {

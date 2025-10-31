@@ -15,7 +15,7 @@ import { PreDiagnosticService } from "@/lib/prediagnostic-service"
 import { DiagnosticService, DiagnosticPayload } from "@/lib/diagnostic-service"
 import { GraphQLClient } from "@/lib/apollo-client"
 import { GET_CASE_DETAIL, GetCaseDetailResponse, CaseDetail } from "@/lib/graphql-queries"
-import { getPreDiagnostic } from "@/server-actions/cases-actions"
+import { getPreDiagnostic, getRadiographyImage } from "@/server-actions/cases-actions"
 
 // Datos mock SIN fechaProcesamiento para evitar errores
 const mockDetailData: Record<string, any> = {
@@ -65,9 +65,10 @@ const mockDetailData: Record<string, any> = {
 
 interface PreDiagnosticDetailProps {
   prediagnosticId: string
+  prediagnosticImage?: string
 }
 
-export function PreDiagnosticDetail({ prediagnosticId }: PreDiagnosticDetailProps) {
+export function PreDiagnosticDetail({ prediagnosticId, prediagnosticImage }: PreDiagnosticDetailProps) {
   const router = useRouter()
   const { toast } = useToast()
   
@@ -105,8 +106,9 @@ export function PreDiagnosticDetail({ prediagnosticId }: PreDiagnosticDetailProp
             const pathParts = backendData.urlrad.split(/[\\/]/) // divide por '/' o '\'
             const filename = pathParts[pathParts.length - 1]  // solo RAD-xxxx.jpg
 
-            // URL correcta hacia FastAPI
-            imageUrl = `http://localhost:8080/prediagnostic/image/${filename}`
+            imageUrl = `http://api-gateway:8080/prediagnostic/image/${filename}`
+            const image = await getRadiographyImage(imageUrl)
+            imageUrl = image ?? ""
             console.log(`🖼️ Imagen URL final: ${imageUrl}`)
           }
           

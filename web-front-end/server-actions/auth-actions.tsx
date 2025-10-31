@@ -108,7 +108,7 @@ export async function getUserFromToken() {
 
   console.log("📥 UserInfo response:", data);  // Debug log
 
-  const avatarUrl = `http://localhost:8080/userImage?id=${user_id}`
+  const avatarUrl = `http://api-gateway:8080/userImage?id=${user_id}`
 
   return {
     id: user_id,
@@ -118,4 +118,26 @@ export async function getUserFromToken() {
     avatar: avatarUrl,
     age: data.edad || data.age || undefined, // Intentar obtener la edad del backend
   };
+}
+
+export async function getProfilePhoto(url: string): Promise<string | undefined> {
+  if (!url) return undefined
+
+  const token = cookies().get("auth-token")?.value
+  if (!token) return undefined
+
+  try {
+    const res = await fetch(url, {
+      cache: "no-store",
+    })
+
+    if (!res.ok) return undefined
+
+    const buffer = await res.arrayBuffer()
+    const base64 = Buffer.from(buffer).toString("base64")
+    return `data:image/jpeg;base64,${base64}`
+  } catch (error) {
+    console.error("Error obteniendo la imagen:", error)
+    return undefined
+  }
 }

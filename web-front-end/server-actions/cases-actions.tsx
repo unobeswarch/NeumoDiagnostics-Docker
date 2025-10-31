@@ -197,6 +197,26 @@ export async function getDiagnostic(id:string) {
     console.error('Error al obtener el diagnostico:', error);
     throw new Error('No se pudo obtener el diagnostico.');
   }
+}
 
+export async function getRadiographyImage(url: string): Promise<string | undefined> {
+  if (!url) return undefined
 
+  const token = cookies().get("auth-token")?.value
+  if (!token) return undefined
+
+  try {
+    const res = await fetch(url, {
+      cache: "no-store",
+    })
+
+    if (!res.ok) return undefined
+
+    const buffer = await res.arrayBuffer()
+    const base64 = Buffer.from(buffer).toString("base64")
+    return `data:image/jpeg;base64,${base64}`
+  } catch (error) {
+    console.error("Error obteniendo la imagen:", error)
+    return undefined
+  }
 }

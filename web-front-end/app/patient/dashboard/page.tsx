@@ -9,7 +9,7 @@ import { RadiographyHistory } from "@/components/radiography-history"
 import { GraphQLClient } from "@/lib/apollo-client"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { getUserFromToken } from "@/server-actions/auth-actions"
+import { getUserFromToken, getProfilePhoto } from "@/server-actions/auth-actions"
 import PatientDashboardClient from "./PatientDashboardClient"
 
 
@@ -91,9 +91,20 @@ const GET_PATIENT_CASES = `
 `
 
 export default async function PatientDashboard() {
-  const current_user = await getUserFromToken();
+  let current_user = await getUserFromToken();
   const cookieStore = cookies();
   const token = cookieStore.get("auth-token")?.value;
+
+  if (current_user?.avatar) {
+    const base64Photo = await getProfilePhoto(current_user.avatar)
+    if (base64Photo) {
+      current_user = { ...current_user, avatar: base64Photo }
+    }
+  }
+
+  console.log("////////////////////////////////////////")
+  console.log(current_user?.avatar)
+  console.log("////////////////////////////////////////")
 
   if (!current_user) {
     redirect("/login");
@@ -139,6 +150,8 @@ export default async function PatientDashboard() {
   } catch (err) {
     console.error("Error fetching patient cases (SSR):", err)
   }
+
+
 
   return (
     <PatientDashboardClient

@@ -79,10 +79,11 @@ interface RadiographDetailHU7Props {
   diagnostic: any
   caseDetail: CaseDetail
   name: string
+  caseImage?: string
   userAge?: string | number  // Añadir age como prop opcional
 }
 
-export function RadiographDetailHU7({ diagnostic, caseDetail, name, userAge }: RadiographDetailHU7Props) {
+export function RadiographDetailHU7({ diagnostic, caseDetail, name, caseImage }: RadiographDetailHU7Props) {
 
   return (
     <div className="h-[80vh] bg-gray-50 overflow-hidden rounded-lg">
@@ -96,7 +97,7 @@ export function RadiographDetailHU7({ diagnostic, caseDetail, name, userAge }: R
               <div className="h-full bg-black flex items-center justify-center">
                 {caseDetail.urlImagen ? (
                   <img 
-                    src={caseDetail.urlImagen ? `http://localhost:8080/prediagnostic/image/${caseDetail.urlImagen.split('/').pop()}` : undefined}
+                    src={caseImage ? caseImage : undefined}
                     alt="Radiografía pulmonar"
                     className="max-w-full max-h-full object-contain"
                     onError={(e) => {

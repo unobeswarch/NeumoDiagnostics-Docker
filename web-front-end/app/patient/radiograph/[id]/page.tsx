@@ -7,7 +7,8 @@ import { redirect } from 'next/navigation'
 import { getCaseDetail } from '@/server-actions/cases-actions'
 import Link from 'next/link'
 import { cookies } from 'next/headers'
-import { getDiagnostic } from '@/server-actions/cases-actions'
+import { getDiagnostic, getRadiographyImage } from '@/server-actions/cases-actions'
+import { getProfilePhoto } from '@/server-actions/auth-actions'
 
 interface RadiographDetailPageProps {
   params: { id: string }
@@ -17,7 +18,7 @@ interface RadiographDetailPageProps {
 // HU7: Detailed view of a specific radiograph case
 export default async function RadiographDetailPage({ params }: RadiographDetailPageProps) {
   const caseId = params.id
-  const currentUser = await getUserFromToken()
+  let currentUser = await getUserFromToken()
   const cookieStore = cookies();
   const token = cookieStore.get("auth-token")?.value;
 
@@ -27,6 +28,13 @@ export default async function RadiographDetailPage({ params }: RadiographDetailP
 
   if (!token) {
     redirect("/login")
+  }
+
+  if (currentUser?.avatar) {
+    const base64Photo = await getProfilePhoto(currentUser.avatar)
+    if (base64Photo) {
+      currentUser = { ...currentUser, avatar: base64Photo }
+    }
   }
 
   const response = await getCaseDetail(caseId, token)
@@ -43,6 +51,10 @@ export default async function RadiographDetailPage({ params }: RadiographDetailP
   }
 
   const diagnostic = await getDiagnostic(caseDetail.id)
+
+  const url = `http://api-gateway:8080/prediagnostic/image/${caseDetail.urlImagen.split('/').pop()}`
+
+  const imageBase64 = await getRadiographyImage(url)
 
   return (
     <div className="min-h-screen bg-background">
@@ -78,6 +90,7 @@ export default async function RadiographDetailPage({ params }: RadiographDetailP
         <RadiographDetailHU7 
           diagnostic = {diagnostic}
           caseDetail={caseDetail} 
+          caseImage={imageBase64}
           name={currentUser.name}
           userAge={currentUser.age || 'No disponible'}
         />

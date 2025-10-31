@@ -1,12 +1,19 @@
 import { DoctorHeader } from "@/components/doctor-header"
 import { DashboardCasosPendientes } from "@/components/dashboard-casos-pendientes"
-import { getUserFromToken } from "@/server-actions/auth-actions";
+import { getUserFromToken, getProfilePhoto } from "@/server-actions/auth-actions";
 import { redirect } from "next/navigation";
 
 export default async function CasosPendientesPage() {
-  const current_user = await getUserFromToken();
+  let current_user = await getUserFromToken();
 
   if (!current_user) redirect("/login")
+
+  if (current_user?.avatar) {
+    const base64Photo = await getProfilePhoto(current_user.avatar)
+    if (base64Photo) {
+      current_user = { ...current_user, avatar: base64Photo }
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">

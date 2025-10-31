@@ -6,7 +6,7 @@ import { DoctorHeader } from "@/components/doctor-header"
 import Link from "next/link"
 import { GraphQLClient } from '@/lib/apollo-client'
 import { GET_CASES, Case, GetCasesResponse } from '@/lib/get-cases-query'
-import { getUserFromToken } from "@/server-actions/auth-actions"
+import { getUserFromToken, getProfilePhoto } from "@/server-actions/auth-actions"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import DoctorDashboardClient from "./DoctorDashboardClient"
@@ -33,9 +33,16 @@ interface CaseDetail {
 }
 
 export default async function DoctorDashboard() {
-  const current_user = await getUserFromToken();
+  let current_user = await getUserFromToken();
   const cookieStore = cookies();
   const token = cookieStore.get("auth-token")?.value;
+
+  if (current_user?.avatar) {
+    const base64Photo = await getProfilePhoto(current_user.avatar)
+    if (base64Photo) {
+      current_user = { ...current_user, avatar: base64Photo }
+    }
+  }
   
   if (!current_user) {
     redirect("/login");

@@ -1,3 +1,17 @@
+networks:
+  private:
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.10.0/26
+    internal: true
+
+  public:
+    ipam:
+        driver: default
+        config:
+          - subnet: 172.30.0.0/24
+
 services:
 
   auth-db:
@@ -12,6 +26,8 @@ services:
       - "5432:5432"
     volumes:
       - ./inicializacion_auth_db.sql:/docker-entrypoint-initdb.d/inicializacion_auth_db.sql
+    networks:
+      - private
 
   message-broker:
     image: rabbitmq:3-management
@@ -28,6 +44,8 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
+    networks:
+      - private
   
   notification-be:
     build: ./notification-be
@@ -37,6 +55,8 @@ services:
     depends_on:
       message-broker:
         condition: service_healthy
+    networks:
+      - private
 
   prediagnostic-db:
     image: mongo
@@ -44,6 +64,8 @@ services:
     container_name: prediagnostic-db
     ports:
       - "27017:27017"
+    networks:
+      - private
 
   api-gateway:
     build: ./api-gateway
@@ -52,6 +74,8 @@ services:
       - "8080:8080"
     depends_on:
       - auth-db
+    networks:
+      - private
 
   prediagnostic-be:
     build: ./prediagnostic-be
@@ -60,17 +84,25 @@ services:
       - "8000:8000"
     depends_on:
       - prediagnostic-db
+    networks:
+      - private
+
   web-front-end:
     build: ./web-front-end
     container_name: web-front-end
     ports:
       - "3000:3000"
+    networks:
+      - private
+      - public
 
-  auth-be:
+  auth-be:  
     build: ./auth-be
     container_name: auth-be
     ports:
       - "8081:8081"
+    networks:
+      - private
 
   cli-front-end:
     build: ./cli-front-end
@@ -78,6 +110,9 @@ services:
     tty: true
     stdin_open: true
     command: ["tail", "-f", "/dev/null"]
+    networks:
+      - private
+      - public
 
   message-producer:
     build: ./message-producer
@@ -89,4 +124,6 @@ services:
         condition: service_healthy
       notification-be:
         condition: service_started
+    networks:
+      - private
 

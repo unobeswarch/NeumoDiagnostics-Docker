@@ -3,14 +3,18 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 192.168.10.0/26
-    internal: true
+        - subnet: 192.168.10.0/26    # Internal services network
+    internal: true                    # Ensures network isolation from external access
+    labels:
+      description: "Backend and Data Services Network"
 
   public:
     ipam:
       driver: default
       config:
-        - subnet: 172.30.0.0/24
+        - subnet: 172.30.0.0/24      # External access network
+    labels:
+      description: "Frontend Public Access Network"
 
 services:
 
@@ -126,4 +130,3 @@ services:
         condition: service_started
     networks:
       - private
-

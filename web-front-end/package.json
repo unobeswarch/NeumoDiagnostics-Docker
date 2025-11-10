@@ -5,8 +5,13 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
+    "dev:https": "cross-env USE_HTTPS=true node server.js",
+    "dev:http": "next dev",
+    "start": "next start",
+    "start:https": "cross-env NODE_ENV=production USE_HTTPS=true node server.js",
     "lint": "next lint",
-    "start": "next start"
+    "certs:generate": "bash scripts/generate-certs.sh",
+    "certs:generate:win": "scripts\\generate-certs.bat"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -65,6 +70,7 @@
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "cross-env": "^7.0.3",
     "postcss": "^8.5",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"

@@ -92,10 +92,21 @@ services:
       - private
 
   web-front-end:
-    build: ./web-front-end
+    build:
+      context: ./web-front-end
+      target: development
     container_name: web-front-end
+    environment:
+      - NODE_ENV=development
+      - USE_HTTPS=false  # Set to 'true' to enable HTTPS in container
+      - HTTPS_PORT=3443
+      - HTTP_PORT=3000
     ports:
-      - "3000:3000"
+      - "3000:3000"      # HTTP
+      - "3443:3443"      # HTTPS
+    volumes:
+      # Mount certificates for HTTPS (generate locally first)
+      - ./web-front-end/certs:/app/certs:ro
     networks:
       - private
       - public

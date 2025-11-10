@@ -1,0 +1,15 @@
+# Docker Compose override for HTTPS development
+# Usage: docker-compose -f docker-compose.yml -f web-front-end/docker-compose.https.yml up
+
+version: '3.8'
+
+services:
+  web-front-end:
+    environment:
+      - USE_HTTPS=true
+      - HTTPS_PORT=3443
+      - HTTP_PORT=3000
+    ports:
+      - "3000:3000"   # HTTP (redirects to HTTPS)
+      - "3443:3443"   # HTTPS
+

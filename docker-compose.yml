@@ -74,8 +74,9 @@ services:
   api-gateway:
     build: ./api-gateway
     container_name:  api-gateway
-    ports:
-      - "8080:8080"
+    # Removed external port exposure - only accessible via reverse proxy
+    expose:
+      - "8080"
     depends_on:
       - auth-db
     networks:
@@ -94,8 +95,9 @@ services:
   web-front-end:
     build: ./web-front-end
     container_name: web-front-end
-    ports:
-      - "3000:3000"
+    # Removed external port exposure - only accessible via reverse proxy
+    expose:
+      - "3000"
     networks:
       - private
       - public
@@ -113,9 +115,14 @@ services:
     container_name: cli-front-end
     tty: true
     stdin_open: true
+    environment:
+      # CLI accesses REST endpoints through reverse proxy
+      API_GATEWAY_URL: "http://reverse-proxy"
     command: ["tail", "-f", "/dev/null"]
+    depends_on:
+      - reverse-proxy
+      - auth-be
     networks:
-      - private
       - public
 
   message-producer:
@@ -130,3 +137,17 @@ services:
         condition: service_started
     networks:
       - private
+
+  reverse-proxy:
+    build: ./reverse-proxy
+    container_name: reverse-proxy
+    ports:
+      - "80:80"
+    depends_on:
+      - api-gateway
+      - web-front-end
+    networks:
+      - private
+      - public
+    restart: unless-stopped
+

@@ -1,28 +1,114 @@
 # Reverse Proxy Component
 
-This reverse proxy component uses Nginx to route traffic between the frontend components and the API Gateway.
+This reverse proxy component uses **Nginx** to route traffic between the frontend components and the API Gateway with **HTTPS/TLS support**.
+
+## Features
+
+- ✅ **HTTPS/TLS termination** - SSL certificates handled at the proxy level
+- ✅ **HTTP to HTTPS redirect** - All HTTP traffic automatically redirected to HTTPS
+- ✅ **Domain-based routing** - Different services accessible via subdomains
+- ✅ **Single entry point**: All external traffic goes through ports 80 (HTTP) and 443 (HTTPS)
+- ✅ **Service isolation**: Backend services are not directly exposed to the host
+- ✅ **Load balancing**: Can be extended for multiple instances
+- ✅ **WebSocket support**: For Next.js hot reload and GraphQL subscriptions
 
 ## Architecture
 
+```
+Internet/Browser
+       |
+       | HTTPS (443) / HTTP (80)
+       ↓
+  Nginx Reverse Proxy (SSL/TLS Termination)
+       |
+       ├─→ https://localhost        → web-front-end:3000 (Next.js)
+       ├─→ https://app.localhost    → web-front-end:3000 (Next.js)
+       └─→ https://api.localhost    → api-gateway:8080 (GraphQL)
+```
+
 The reverse proxy sits between external clients and the internal services, providing:
 
-- **Single entry point**: All external traffic goes through port 80
-- **Service isolation**: Backend services are not directly exposed to the host
+- **HTTPS/TLS Termination**: Handles SSL certificates and encryption
+- **HTTP to HTTPS Redirect**: Automatically redirects all HTTP traffic to HTTPS
+- **Single entry point**: All external traffic goes through ports 80/443
+- **Service isolation**: Backend services communicate via HTTP internally
 - **Load balancing**: Can be extended for multiple instances
-- **SSL termination**: Ready for HTTPS configuration
 
-### Internal vs External Access
+## SSL Certificates
 
-- **External clients** (browser, external APIs): Access through reverse proxy on port 80
-- **Internal containers** (cli-front-end): Can access api-gateway directly on private network for better performance
-  - CLI uses `http://api-gateway:8080` directly
-  - No reverse proxy overhead for internal communication
+The reverse proxy uses **self-signed certificates** for local development.
+
+### Generate Certificates
+
+**IMPORTANT**: Before starting the Docker containers for the first time, you must generate SSL certificates.
+
+**On macOS/Linux:**
+```bash
+cd reverse-proxy/scripts
+./generate-certs.sh
+```
+
+**On Windows:**
+```cmd
+cd reverse-proxy\scripts
+generate-certs.bat
+```
+
+### Certificate Files
+
+Certificates are stored in `reverse-proxy/certs/`:
+- `localhost.crt` - SSL certificate
+- `localhost.key` - Private key
+
+These files are mounted into the Nginx container as read-only volumes.
+
+### Trust the Certificate (Optional)
+
+To avoid browser security warnings, you can add the certificate to your system's trusted certificates:
+
+**macOS:**
+```bash
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain \
+  reverse-proxy/certs/localhost.crt
+```
+
+**Linux:**
+```bash
+sudo cp reverse-proxy/certs/localhost.crt /usr/local/share/ca-certificates/
+sudo update-ca-certificates
+```
+
+**Windows:**
+1. Double-click on `localhost.crt`
+2. Click "Install Certificate"
+3. Select "Local Machine"
+4. Choose "Place all certificates in the following store"
+5. Browse and select "Trusted Root Certification Authorities"
+6. Complete the wizard
+
+### Browser Security Warning
+
+When accessing HTTPS for the first time, your browser will show a security warning because the certificate is self-signed. This is **normal for development**.
+
+**To proceed:**
+1. Click "Advanced" or "Show Details"
+2. Click "Proceed to localhost (unsafe)" or similar
 
 ## Access Points
 
-### Default (localhost)
-- **Web Frontend**: http://localhost
-- **API Gateway**: http://localhost/graphql or http://localhost/api
+### Recommended: HTTPS Access (Secure)
+- **Web Frontend**: https://localhost or https://app.localhost
+- **API Gateway**: https://localhost/graphql or https://api.localhost/graphql
+
+### HTTP Access (Auto-redirects to HTTPS)
+- All HTTP URLs automatically redirect to HTTPS
+- http://localhost → https://localhost
+- http://app.localhost → https://app.localhost
+- http://api.localhost → https://api.localhost
+
+### Direct Container Access (Bypassing Proxy)
+- **Web Frontend**: http://localhost:3000 (HTTP only, development)
+- **API Gateway**: Internal only (port 8080 not exposed to host)
 
 ### Using Subdomains (optional)
 Add these entries to your `/etc/hosts` file for subdomain access:
@@ -31,32 +117,116 @@ Add these entries to your `/etc/hosts` file for subdomain access:
 127.0.0.1 api.localhost
 ```
 
-Then access:
-- **Web Frontend**: http://app.localhost
-- **API Gateway**: http://api.localhost/graphql
+## Quick Start
+
+### 1. Generate SSL Certificates (First Time Only)
+
+```bash
+cd reverse-proxy/scripts
+./generate-certs.sh  # On macOS/Linux
+# or
+generate-certs.bat   # On Windows
+```
+
+### 2. Start All Services
+
+```bash
+# From project root
+docker-compose up -d --build
+```
+
+### 3. Access the Application
+
+Once services are running:
+
+- **Web Frontend**: https://localhost
+- **API Gateway**: https://localhost/graphql
+- **RabbitMQ Management**: http://localhost:15672
+
+### 4. (Optional) Trust the Certificate
+
+To avoid browser warnings, follow the instructions in the "Trust the Certificate" section above.
 
 ## Configuration
 
 The nginx configuration (`nginx.conf`) defines:
 
 1. **Upstream servers**: `api-gateway:8080` and `web-front-end:3000`
-2. **Server blocks**: Separate routing for API and web frontend
-3. **Proxy settings**: Headers for proper request forwarding
+2. **SSL/TLS Configuration**: TLS 1.2 and 1.3 with strong ciphers
+3. **Server blocks**: 
+   - HTTP servers (port 80) that redirect to HTTPS
+   - HTTPS servers (port 443) with SSL termination
+4. **Proxy settings**: Headers for proper request forwarding including X-Forwarded-Proto
+
+### SSL Configuration
+
+```nginx
+ssl_certificate /etc/nginx/certs/localhost.crt;
+ssl_certificate_key /etc/nginx/certs/localhost.key;
+ssl_protocols TLSv1.2 TLSv1.3;
+ssl_ciphers HIGH:!aNULL:!MD5;
+ssl_prefer_server_ciphers on;
+```
 
 ## Routing Rules
 
-### API Gateway Routes
+### HTTP to HTTPS Redirect
+All HTTP (port 80) requests are automatically redirected to HTTPS (port 443):
+- http://localhost → https://localhost
+- http://app.localhost → https://app.localhost
+- http://api.localhost → https://api.localhost
+
+### API Gateway Routes (HTTPS)
 - `/graphql` → api-gateway:8080/graphql
 - `/api/*` → api-gateway:8080/api/*
+- `/auth`, `/register` → api-gateway:8080/auth, /register
 
-### Web Frontend Routes
+### Web Frontend Routes (HTTPS)
 - `/` → web-front-end:3000/
 - `/_next/*` → web-front-end:3000/_next/* (Next.js static files)
+
+## Troubleshooting
+
+### Cannot Access HTTPS
+
+1. **Check certificates exist:**
+   ```bash
+   ls -la reverse-proxy/certs/
+   ```
+   You should see `localhost.crt` and `localhost.key`
+
+2. **Regenerate certificates:**
+   ```bash
+   cd reverse-proxy/scripts
+   ./generate-certs.sh
+   ```
+
+3. **Rebuild containers:**
+   ```bash
+   docker-compose down
+   docker-compose up --build
+   ```
+
+### Browser Shows ERR_SSL_PROTOCOL_ERROR
+
+- Ensure you're accessing `https://` (not `http://`)
+- Check that port 443 is not blocked by firewall
+- Verify certificates were generated correctly
+
+### Certificate Not Trusted Warning
+
+This is normal for self-signed certificates. You can either:
+1. Click "Advanced" and "Proceed to localhost (unsafe)"
+2. Trust the certificate system-wide (see "Trust the Certificate" section above)
 
 ## Health Check
 
 Check the reverse proxy health:
 ```bash
+# HTTPS (recommended)
+curl -k https://localhost/health
+
+# HTTP (will redirect to HTTPS)
 curl http://localhost/health
 ```
 
@@ -72,28 +242,55 @@ docker exec -it reverse-proxy tail -f /var/log/nginx/access.log
 docker exec -it reverse-proxy tail -f /var/log/nginx/error.log
 ```
 
+## Docker Compose Configuration
+
+The reverse-proxy service is configured in `docker-compose.yml`:
+
+```yaml
+reverse-proxy:
+  build: ./reverse-proxy
+  container_name: reverse-proxy
+  ports:
+    - "80:80"      # HTTP
+    - "443:443"    # HTTPS
+  volumes:
+    # Mount SSL certificates directory
+    - ./reverse-proxy/certs:/etc/nginx/certs:ro
+  depends_on:
+    - api-gateway
+    - web-front-end
+  networks:
+    - private
+    - public
+  restart: unless-stopped
+```
+
 ## Network Configuration
 
 - **Private Network** (192.168.10.0/26): Internal services communication
 - **Public Network** (172.30.0.0/24): External access through reverse proxy
 
-Only the reverse proxy exposes port 80 to the host machine. The API Gateway (8080) and Web Frontend (3000) are only accessible internally.
-
-## Customization
-
-To modify routing rules, edit `nginx.conf` and rebuild:
-
-```bash
-docker-compose up -d --build reverse-proxy
-```
+Only the reverse proxy exposes ports 80 (HTTP) and 443 (HTTPS) to the host machine. Backend services communicate internally via HTTP.
 
 ## Security Features
 
-- Internal services not directly exposed
-- Request header sanitization
-- Static file caching
-- Hidden files (.env, .git) blocked
-- Customizable rate limiting (add as needed)
+### Current (Development)
+- ⚠️ Self-signed certificates (browser warnings expected)
+- ⚠️ Private keys in repository (for development only)
+- ✅ HTTP to HTTPS redirect
+- ✅ Internal services not directly exposed
+- ✅ Request header sanitization
+- ✅ Static file caching
+- ✅ Hidden files (.env, .git) blocked
+
+### For Production
+- ✅ Use valid SSL certificates (Let's Encrypt, AWS Certificate Manager, etc.)
+- ✅ Store certificates in secrets management (not in Git)
+- ✅ Enable additional security headers (HSTS, CSP, X-Frame-Options, etc.)
+- ✅ Configure rate limiting
+- ✅ Add DDoS protection
+- ✅ Enable request logging and monitoring
+- ✅ Implement IP whitelisting if needed
 
 # Reverse Proxy Implementation - Quick Start Guide
 

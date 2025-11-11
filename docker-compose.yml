@@ -99,15 +99,11 @@ services:
     container_name: web-front-end
     environment:
       - NODE_ENV=development
-      - USE_HTTPS=false  # Set to 'true' to enable HTTPS in container
-      - HTTPS_PORT=3443
+      - USE_HTTPS=false  # HTTPS handled by reverse proxy
       - HTTP_PORT=3000
-    ports:
-      - "3000:3000"      # HTTP
-      - "3443:3443"      # HTTPS
-    volumes:
-      # Mount certificates for HTTPS (generate locally first)
-      - ./web-front-end/certs:/app/certs:ro
+    # Only expose port internally - access through reverse proxy
+    expose:
+      - "3000"
     networks:
       - private
       - public
@@ -152,7 +148,11 @@ services:
     build: ./reverse-proxy
     container_name: reverse-proxy
     ports:
-      - "80:80"
+      - "80:80"      # HTTP
+      - "443:443"    # HTTPS
+    volumes:
+      # Mount SSL certificates directory
+      - ./reverse-proxy/certs:/etc/nginx/certs:ro
     depends_on:
       - api-gateway
       - web-front-end

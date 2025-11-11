@@ -1,0 +1,51 @@
+# SSL Certificates (auto-generated for development)
+reverse-proxy/certs/*.crt
+reverse-proxy/certs/*.key
+reverse-proxy/certs/*.csr
+reverse-proxy/certs/*.pem
+
+# Web Frontend Certificates
+web-front-end/certs/*.crt
+web-front-end/certs/*.key
+web-front-end/certs/*.csr
+web-front-end/certs/*.pem
+
+# Environment files
+.env
+*.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Build outputs
+dist/
+build/
+*.exe
+target/
+
+# Database
+*.db
+*.sqlite
+data/

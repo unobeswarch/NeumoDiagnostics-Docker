@@ -187,16 +187,6 @@ else
 fi
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-
-echo "📝 Configuración del Load Balancer:"
-echo "   - Algoritmo: weighted round robin (pesos 3:2:1)"
-echo "   - api-gateway-1: weight=3 (~50%)"
-echo "   - api-gateway-2: weight=2 (~33%)"
-echo "   - api-gateway-3: weight=1 (~17%)"
-echo "   - Health checks: max_fails=3, fail_timeout=30s"
-echo "   - Keepalive: deshabilitado (para distribución precisa)"
-echo ""
 
 # Tiempo total
 END_TIME=$(date +%s)
@@ -209,9 +199,3 @@ if [ $success_count -eq 30 ]; then
 else
     echo "⚠️  Test completado con advertencias"
 fi
-echo ""
-echo "💡 Tip: Con weighted round robin, api-gateway-1 debería recibir"
-echo "   aproximadamente el 50% de las peticiones, api-gateway-2 el 33%,"
-echo "   y api-gateway-3 el 17%"
-echo ""
-echo ""

@@ -15,7 +15,7 @@ export interface Case {
 }
 
 export class CasesService {
-  private static readonly BASE_URL = "http://localhost:8080"
+  private static readonly BASE_URL = "http://reverse-proxy" // Load balancer endpoint
 
   /**
    * Fetches all pending cases from the backend

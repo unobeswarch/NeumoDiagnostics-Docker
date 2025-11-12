@@ -117,7 +117,7 @@ export class DiagnosticService {
     diagnostic: DiagnosticPayload
   ): Promise<any> {
     console.log(`🔍 DEBUG DIAGNOSTIC: Intentando enviar diagnóstico`);
-    console.log(`🔗 DEBUG: URL del GraphQL Client:`, 'http://localhost:8080/query');
+    console.log(`🔗 DEBUG: URL del GraphQL Client:`, 'http://reverse-proxy/graphql');
     console.log(`📝 DEBUG: Mutation que se enviará:`, CREATE_DIAGNOSTIC);
     console.log(`📋 DEBUG: Variables:`, { 
       id_prediagnostico: prediagnosticId, 

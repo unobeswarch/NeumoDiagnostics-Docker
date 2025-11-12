@@ -106,7 +106,7 @@ export function PreDiagnosticDetail({ prediagnosticId, prediagnosticImage }: Pre
             const pathParts = backendData.urlrad.split(/[\\/]/) // divide por '/' o '\'
             const filename = pathParts[pathParts.length - 1]  // solo RAD-xxxx.jpg
 
-            imageUrl = `http://api-gateway:8080/prediagnostic/image/${filename}`
+            imageUrl = `http://reverse-proxy/prediagnostic/image/${filename}`
             const image = await getRadiographyImage(imageUrl)
             imageUrl = image ?? ""
             console.log(`🖼️ Imagen URL final: ${imageUrl}`)

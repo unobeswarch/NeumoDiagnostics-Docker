@@ -94,7 +94,7 @@ export async function getCaseDetail(id: string, token: string): Promise<GetCaseD
 
 export async function getAllCases(){
   try {
-    const response = await fetch("http://api-gateway:8080/prediagnostic/cases")
+    const response = await fetch("http://reverse-proxy/prediagnostic/cases")
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -162,7 +162,7 @@ export async function UploadRadiographyImage(formData: FormData) {
   }
 
   try {
-    const response = await fetch("http://api-gateway:8080/query", {
+    const response = await fetch("http://reverse-proxy/query", {
       method: "POST",
       body: formData,
       headers: {
@@ -189,7 +189,7 @@ export async function getDiagnostic(id:string) {
   }
   
   try {
-    const response = await fetch(`http://api-gateway:8080/prediagnostic/diagnostic/${id}`)
+    const response = await fetch(`http://reverse-proxy/prediagnostic/diagnostic/${id}`)
     const result = await response.json()
     return result
     

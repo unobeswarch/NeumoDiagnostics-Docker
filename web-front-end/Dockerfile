@@ -26,10 +26,10 @@ EXPOSE 3000 3443
 
 # Default to development mode with HTTPS
 ENV NODE_ENV=development
-ENV USE_HTTPS=false
+ENV USE_HTTPS=true
 
-# Run dev server (supports both HTTP and HTTPS via server.js)
-CMD ["npm", "run", "dev"]
+# Run custom server with HTTPS support
+CMD ["node", "server.js"]
 
 # Build stage for production
 FROM base AS builder

@@ -1,7 +1,7 @@
 // Cliente GraphQL simple usando fetch API
-// Conecta directamente al backend ya que CORS está habilitado
+// Conecta al reverse-proxy que balancea entre las instancias del API Gateway
 
-const GRAPHQL_URL = 'http://api-gateway:8080/query'; // URL CORRECTA!
+const GRAPHQL_URL = 'http://reverse-proxy/graphql'; // Load balancer endpoint
 
 export class GraphQLClient {
   static async query<T = any>(query: string, variables?: any, token?: string): Promise<T> {

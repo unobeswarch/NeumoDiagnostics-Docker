@@ -52,7 +52,7 @@ export default async function RadiographDetailPage({ params }: RadiographDetailP
 
   const diagnostic = await getDiagnostic(caseDetail.id)
 
-  const url = `http://api-gateway:8080/prediagnostic/image/${caseDetail.urlImagen.split('/').pop()}`
+  const url = `http://reverse-proxy/prediagnostic/image/${caseDetail.urlImagen.split('/').pop()}`
 
   const imageBase64 = await getRadiographyImage(url)
 

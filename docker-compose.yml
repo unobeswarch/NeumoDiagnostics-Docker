@@ -71,16 +71,44 @@ services:
     networks:
       - private
 
-  api-gateway:
+  # API Gateway - Instance 1
+  api-gateway-1:
     build: ./api-gateway
-    container_name:  api-gateway
-    # Removed external port exposure - only accessible via reverse proxy
+    container_name: api-gateway-1
+    hostname: api-gateway-1
     expose:
       - "8080"
     depends_on:
       - auth-db
     networks:
       - private
+    restart: unless-stopped
+
+  # API Gateway - Instance 2
+  api-gateway-2:
+    build: ./api-gateway
+    container_name: api-gateway-2
+    hostname: api-gateway-2
+    expose:
+      - "8080"
+    depends_on:
+      - auth-db
+    networks:
+      - private
+    restart: unless-stopped
+
+  # API Gateway - Instance 3
+  api-gateway-3:
+    build: ./api-gateway
+    container_name: api-gateway-3
+    hostname: api-gateway-3
+    expose:
+      - "8080"
+    depends_on:
+      - auth-db
+    networks:
+      - private
+    restart: unless-stopped
 
   prediagnostic-be:
     build: ./prediagnostic-be
@@ -99,13 +127,18 @@ services:
     container_name: web-front-end
     environment:
       - NODE_ENV=development
-      - USE_HTTPS=false  # HTTPS handled by reverse proxy
+      - USE_HTTPS=true
+      - HTTPS_PORT=3443
       - HTTP_PORT=3000
-    # Only expose port internally - access through reverse proxy
-    expose:
-      - "3000"
+      - HOSTNAME=0.0.0.0
+      - NEXT_PUBLIC_API_URL=http://reverse-proxy  # Frontend accede al API a través del reverse proxy
+    # Expose HTTPS and HTTP ports to allow direct user access
+    ports:
+      - "3443:3443"  # HTTPS
+      - "3000:3000"  # HTTP redirect to HTTPS
+    depends_on:
+      - reverse-proxy
     networks:
-      - private
       - public
 
   auth-be:  
@@ -148,14 +181,11 @@ services:
     build: ./reverse-proxy
     container_name: reverse-proxy
     ports:
-      - "80:80"      # HTTP
-      - "443:443"    # HTTPS
-    volumes:
-      # Mount SSL certificates directory
-      - ./reverse-proxy/certs:/etc/nginx/certs:ro
+      - "80:80"      # HTTP only - API Gateway access
     depends_on:
-      - api-gateway
-      - web-front-end
+      - api-gateway-1
+      - api-gateway-2
+      - api-gateway-3
     networks:
       - private
       - public

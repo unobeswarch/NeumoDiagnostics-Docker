@@ -14,7 +14,7 @@ import { cookies } from "next/headers"
 
 export async function register(userData: any) {
     try {
-      const responseRegister = await fetch("http://api-gateway:8080/register", {
+      const responseRegister = await fetch("http://reverse-proxy/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
@@ -50,7 +50,7 @@ export async function login(formData: FormData): Promise<void> {
   console.log(correo)
   console.log(contrasena)
 
-  const response = await fetch("http://api-gateway:8080/auth", {
+  const response = await fetch("http://reverse-proxy/auth", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ correo, contrasena }),
@@ -94,7 +94,7 @@ export async function getUserFromToken() {
 
   if (!token || !user_id) return null;
 
-  const res = await fetch("http://api-gateway:8080/userInfo", {
+  const res = await fetch("http://reverse-proxy/userInfo", {
     method: "GET",
     headers: {
       "Authorization": `Bearer ${token}`,
@@ -108,7 +108,7 @@ export async function getUserFromToken() {
 
   console.log("📥 UserInfo response:", data);  // Debug log
 
-  const avatarUrl = `http://api-gateway:8080/userImage?id=${user_id}`
+  const avatarUrl = `http://reverse-proxy/userImage?id=${user_id}`
 
   return {
     id: user_id,

@@ -48,6 +48,10 @@ export default async function DoctorDashboard() {
     redirect("/login");
   }
 
+  if (current_user.role == "paciente") {
+    redirect("/patient/dashboard");
+  }
+
   const response = await GraphQLClient.query<GetCasesResponse>(GET_CASES, undefined, token)
 
   console.log(response)

@@ -110,6 +110,11 @@ export default async function PatientDashboard() {
     redirect("/login");
   }
 
+  if (current_user.role == "doctor") {
+    redirect("/doctor/dashboard");
+  }
+
+
   // Function to convert backend case data to frontend RadiographyRecord format
   const convertCaseToRecord = (backendCase: any): RadiographyRecord => {
     console.log("🔄 Converting case:", backendCase)

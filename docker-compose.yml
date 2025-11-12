@@ -26,8 +26,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 123
       POSTGRES_DB: auth_db
-    ports:
-      - "5432:5432"
+    expose:
+      - "5432"
     volumes:
       - ./inicializacion_auth_db.sql:/docker-entrypoint-initdb.d/inicializacion_auth_db.sql
     networks:
@@ -36,9 +36,8 @@ services:
   message-broker:
     image: rabbitmq:3-management
     container_name: message-broker
-    ports:
-      - "5672:5672"    # AMQP port
-      - "15672:15672"  # Management UI
+    expose:
+      - "5672"    # AMQP port
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -61,13 +60,14 @@ services:
         condition: service_healthy
     networks:
       - private
+      - public
 
   prediagnostic-db:
     image: mongo
     restart: always
     container_name: prediagnostic-db
-    ports:
-      - "27017:27017"
+    expose:
+      - "27017"
     networks:
       - private
 
@@ -113,8 +113,8 @@ services:
   prediagnostic-be:
     build: ./prediagnostic-be
     container_name: prediagnostic-be
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     depends_on:
       - prediagnostic-db
     networks:
@@ -136,6 +136,8 @@ services:
     ports:
       - "3443:3443"  # HTTPS
       - "3000:3000"  # HTTP redirect to HTTPS
+    volumes:
+      - ./reverse-proxy/certs:/app/certs
     depends_on:
       - reverse-proxy
     networks:
@@ -144,8 +146,8 @@ services:
   auth-be:  
     build: ./auth-be
     container_name: auth-be
-    ports:
-      - "8081:8081"
+    expose:
+      - "8081"
     networks:
       - private
 
@@ -167,8 +169,8 @@ services:
   message-producer:
     build: ./message-producer
     container_name: message-producer
-    ports:
-      - "8082:8082"
+    expose:
+      - "8082"
     depends_on:
       message-broker:
         condition: service_healthy

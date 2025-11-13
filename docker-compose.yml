@@ -143,13 +143,21 @@ services:
     networks:
       - public
 
-  auth-be:  
+  # Auth Backend - Instance 1
+  auth-be:
     build: ./auth-be
-    container_name: auth-be
+    #container_name: auth-be
     expose:
       - "8081"
+    depends_on:
+      - auth-db
     networks:
       - private
+    restart: unless-stopped
+
+  
+  
+
 
   cli-front-end:
     build: ./cli-front-end

@@ -1,6 +1,14 @@
 "use server"
 
+import https from 'https'
 import { GraphQLClient } from '@/lib/apollo-client'
+
+// Agent para desarrollo que acepta certificados auto-firmados
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false
+})
+
+const API_BASE_URL = "https://reverse-proxy"
 import { 
   GET_PREDIAGNOSTIC, 
   GetPreDiagnosticResponse, 
@@ -94,7 +102,10 @@ export async function getCaseDetail(id: string, token: string): Promise<GetCaseD
 
 export async function getAllCases(){
   try {
-    const response = await fetch("http://reverse-proxy/prediagnostic/cases")
+    const response = await fetch(`${API_BASE_URL}/prediagnostic/cases`, {
+      // @ts-ignore - Next.js fetch acepta agent
+      agent: httpsAgent
+    })
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -162,12 +173,14 @@ export async function UploadRadiographyImage(formData: FormData) {
   }
 
   try {
-    const response = await fetch("http://reverse-proxy/query", {
+    const response = await fetch(`${API_BASE_URL}/query`, {
       method: "POST",
       body: formData,
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      // @ts-ignore - Next.js fetch acepta agent
+      agent: httpsAgent
     })
     const result = await response.json()
     return result
@@ -189,7 +202,10 @@ export async function getDiagnostic(id:string) {
   }
   
   try {
-    const response = await fetch(`http://reverse-proxy/prediagnostic/diagnostic/${id}`)
+    const response = await fetch(`${API_BASE_URL}/prediagnostic/diagnostic/${id}`, {
+      // @ts-ignore - Next.js fetch acepta agent
+      agent: httpsAgent
+    })
     const result = await response.json()
     return result
     
@@ -208,6 +224,8 @@ export async function getRadiographyImage(url: string): Promise<string | undefin
   try {
     const res = await fetch(url, {
       cache: "no-store",
+      // @ts-ignore - Next.js fetch acepta agent
+      agent: httpsAgent
     })
 
     if (!res.ok) return undefined

@@ -5,13 +5,14 @@ import {
   PreDiagnostic 
 } from './graphql-queries';
 import { getPreDiagnostic } from '@/server-actions/cases-actions';
+import { API_BASE_URL } from './https-agent';
 
 export class PreDiagnosticService {
   
 
   static async debugConnection(id: string): Promise<any> {
     console.log(`🔍 DEBUG: Intentando conectar con backend para ID: ${id}`);
-    console.log(`🔗 DEBUG: URL del GraphQL Client:`, 'http://reverse-proxy/graphql');
+    console.log(`🔗 DEBUG: URL del GraphQL Client:`, `${API_BASE_URL}/graphql`);
     
     try {
       console.log(`📝 DEBUG: Query que se enviará:`, GET_PREDIAGNOSTIC);

@@ -1,7 +1,9 @@
 // Cliente GraphQL simple usando fetch API
 // Conecta al reverse-proxy que balancea entre las instancias del API Gateway
 
-const GRAPHQL_URL = 'http://reverse-proxy/graphql'; // Load balancer endpoint
+import { httpsAgent, API_BASE_URL } from './https-agent'
+
+const GRAPHQL_URL = `${API_BASE_URL}/graphql`; // Load balancer endpoint
 
 export class GraphQLClient {
   static async query<T = any>(query: string, variables?: any, token?: string): Promise<T> {
@@ -39,6 +41,8 @@ export class GraphQLClient {
         body: JSON.stringify(requestBody),
         credentials: 'omit', // Sin credenciales para evitar problemas
         mode: 'cors', // Explícitamente CORS
+        // @ts-ignore - Next.js fetch acepta agent
+        agent: httpsAgent
       });
 
       console.log(`📥 Response status: ${response.status}`);

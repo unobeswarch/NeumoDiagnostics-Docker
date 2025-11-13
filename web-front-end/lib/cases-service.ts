@@ -1,6 +1,8 @@
 // Service for handling REST API calls to /businesslogic/cases endpoint
 // Following the existing pattern from PreDiagnosticService but for REST instead of GraphQL
 
+import { httpsAgent, API_BASE_URL } from './https-agent'
+
 export interface Case {
   id: string
   patientId: string
@@ -15,7 +17,7 @@ export interface Case {
 }
 
 export class CasesService {
-  private static readonly BASE_URL = "http://reverse-proxy" // Load balancer endpoint
+  private static readonly BASE_URL = API_BASE_URL // Load balancer endpoint
 
   /**
    * Fetches all pending cases from the backend
@@ -34,6 +36,8 @@ export class CasesService {
         },
         mode: "cors",
         credentials: "omit",
+        // @ts-ignore - Next.js fetch acepta agent
+        agent: httpsAgent
       })
 
       console.log(`📥 Response status: ${response.status}`)
@@ -80,6 +84,8 @@ export class CasesService {
         },
         mode: "cors",
         credentials: "omit",
+        // @ts-ignore - Next.js fetch acepta agent
+        agent: httpsAgent
       })
 
       const endTime = performance.now()

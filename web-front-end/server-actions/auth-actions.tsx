@@ -11,14 +11,22 @@ interface User {
 
 import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
+import https from "https"
+
+// Agent para desarrollo que acepta certificados auto-firmados
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false
+})
 
 export async function register(userData: any) {
     try {
-      const responseRegister = await fetch("http://reverse-proxy/register", {
+      const responseRegister = await fetch("https://reverse-proxy/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
-        cache: "no-store"
+        cache: "no-store",
+        // @ts-ignore - Next.js fetch acepta agent
+        agent: httpsAgent
       })
 
     if (!responseRegister.ok) {
@@ -50,11 +58,13 @@ export async function login(formData: FormData): Promise<void> {
   console.log(correo)
   console.log(contrasena)
 
-  const response = await fetch("http://reverse-proxy/auth", {
+  const response = await fetch("https://reverse-proxy/auth", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ correo, contrasena }),
-    cache: "no-store"
+    cache: "no-store",
+    // @ts-ignore - Next.js fetch acepta agent
+    agent: httpsAgent
   })
 
   if (!response.ok) {
@@ -94,12 +104,14 @@ export async function getUserFromToken() {
 
   if (!token || !user_id) return null;
 
-  const res = await fetch("http://reverse-proxy/userInfo", {
+  const res = await fetch("https://reverse-proxy/userInfo", {
     method: "GET",
     headers: {
       "Authorization": `Bearer ${token}`,
       "Content-Type": "application/json",
     },
+    // @ts-ignore - Next.js fetch acepta agent
+    agent: httpsAgent
   });
 
   if (!res.ok) return null;
@@ -108,7 +120,7 @@ export async function getUserFromToken() {
 
   console.log("📥 UserInfo response:", data);  // Debug log
 
-  const avatarUrl = `http://reverse-proxy/userImage?id=${user_id}`
+  const avatarUrl = `https://localhost/userImage?id=${user_id}`
 
   return {
     id: user_id,
@@ -129,6 +141,8 @@ export async function getProfilePhoto(url: string): Promise<string | undefined> 
   try {
     const res = await fetch(url, {
       cache: "no-store",
+      // @ts-ignore - Next.js fetch acepta agent
+      agent: httpsAgent
     })
 
     if (!res.ok) return undefined

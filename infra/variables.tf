@@ -261,10 +261,10 @@ variable "db_username" {
 }
 
 variable "db_password" {
-  description = "Contraseña del usuario maestro (set via TF_VAR_db_password)"
+  description = "Contraseña del usuario maestro - SET VIA: $env:TF_VAR_db_password='YourPassword'"
   type        = string
   sensitive   = true
-  default     = "Nm0Auth#Dev2024$X"  # Default for dev, override in production
+  # NO DEFAULT - must be provided via environment variable for security
 }
 
 variable "db_name" {

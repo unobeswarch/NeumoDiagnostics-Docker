@@ -17,13 +17,16 @@ web-front-end/certs/*.pem
 **/.env
 
 # Terraform
-infra/*.tfvars
-!infra/terraform.tfvars.example
 infra/.terraform/
 infra/*.tfstate
 infra/*.tfstate.*
-infra/tfplan
+infra/tfplan*
 infra/.terraform.lock.hcl
+
+# Secrets scripts (may contain passwords)
+infra/setup-secrets.ps1
+infra/setup-secrets.sh
+infra/secrets.tfvars
 
 # IDE
 .vscode/

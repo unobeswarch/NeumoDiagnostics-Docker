@@ -14,22 +14,34 @@ import { cookies } from "next/headers"
 import { headers } from "next/headers"
 
 // API URL for server-side requests (Cloud Map in AWS, reverse-proxy in docker-compose)
-const API_URL = process.env.SERVER_API_URL || "http://reverse-proxy"
+// Using a function to ensure runtime evaluation
+function getApiUrl() {
+  return process.env.SERVER_API_URL || "http://reverse-proxy"
+}
 
 export async function register(userData: any) {
+    const apiUrl = getApiUrl()
+    console.log("📝 Register attempt:", { userData, apiUrl })
+    
     try {
-      const responseRegister = await fetch(`${API_URL}/register`, {
+      console.log(`🔗 Calling: ${apiUrl}/register`)
+      const responseRegister = await fetch(`${apiUrl}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
         cache: "no-store"
       })
 
+      console.log(`📥 Response status: ${responseRegister.status}`)
+
     if (!responseRegister.ok) {
+      const errorText = await responseRegister.text()
+      console.error(`❌ Register failed: ${responseRegister.status} - ${errorText}`)
       return false
     }
 
     const registerData = await responseRegister.json()
+    console.log("✅ Register success:", registerData)
 
     const newUser = {
       id: registerData.id,
@@ -42,7 +54,7 @@ export async function register(userData: any) {
     return true
 
   } catch (error) {
-    console.error("Error en registro:", error)
+    console.error("❌ Error en registro:", error)
     return false
   }
 }
@@ -60,7 +72,7 @@ export async function login(formData: FormData): Promise<void> {
   
   const userAgent = h.get("user-agent") || ""
 
-  const response = await fetch(`${API_URL}/auth`, {
+  const response = await fetch(`${getApiUrl()}/auth`, {
     method: "POST",
     headers: { 
       "Content-Type": "application/json",
@@ -132,7 +144,7 @@ export async function getUserFromToken() {
   
   const userAgent = h.get("user-agent") || ""
 
-  const res = await fetch(`${API_URL}/userInfo`, {
+  const res = await fetch(`${getApiUrl()}/userInfo`, {
     method: "GET",
     headers: {
       "Authorization": `Bearer ${token}`,
@@ -149,7 +161,7 @@ export async function getUserFromToken() {
 
   console.log("📥 UserInfo response:", data);  // Debug log
 
-  const avatarUrl = `${API_URL}/userImage?id=${user_id}`
+  const avatarUrl = `${getApiUrl()}/userImage?id=${user_id}`
 
   return {
     id: user_id,

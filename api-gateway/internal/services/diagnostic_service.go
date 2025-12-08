@@ -141,7 +141,7 @@ func (s *DiagnosticService) extractStringFromCase(caseData map[string]interface{
 }
 
 func CaseDetail(prediagnosticID string) ([]byte, int, error) {
-	resp, err := http.Get("http://prediagnostic-be:8000/prediagnostic/diagnostic/" + prediagnosticID)
+	resp, err := http.Get(getPrediagnosticURL() + "/prediagnostic/diagnostic/" + prediagnosticID)
 	if err != nil {
 		return nil, 0, err
 	}

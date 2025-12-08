@@ -10,8 +10,10 @@ import { cookies } from 'next/headers'
 import { getDiagnostic, getRadiographyImage } from '@/server-actions/cases-actions'
 import { getProfilePhoto } from '@/server-actions/auth-actions'
 
-// API URL for server-side requests
-const API_URL = process.env.SERVER_API_URL || "http://reverse-proxy"
+// API URL for server-side requests - runtime evaluation
+function getApiUrl() {
+  return process.env.SERVER_API_URL || "http://reverse-proxy"
+}
 
 interface RadiographDetailPageProps {
   params: { id: string }
@@ -55,7 +57,7 @@ export default async function RadiographDetailPage({ params }: RadiographDetailP
 
   const diagnostic = await getDiagnostic(caseDetail.id)
 
-  const url = `${API_URL}/prediagnostic/image/${caseDetail.urlImagen.split('/').pop()}`
+  const url = `${getApiUrl()}/prediagnostic/image/${caseDetail.urlImagen.split('/').pop()}`
 
   const imageBase64 = await getRadiographyImage(url)
 

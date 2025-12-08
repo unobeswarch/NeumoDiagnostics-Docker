@@ -4,10 +4,19 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 
 	"github.com/unobeswarch/businesslogic/internal/clients"
 	"github.com/unobeswarch/businesslogic/internal/graph/model"
 )
+
+// getPrediagnosticURL returns the prediagnostic service URL from env or default
+func getPrediagnosticURL() string {
+	if url := os.Getenv("PREDIAGNOSTIC_SERVICE_URL"); url != "" {
+		return url
+	}
+	return "http://prediagnostic-be:8000"
+}
 
 type PreDiagnosticService struct {
 	client *clients.PreDiagnosticClient
@@ -43,7 +52,7 @@ func (s *PreDiagnosticService) GetPreDiagnosticByID(id string) (*model.PreDiagno
 }
 
 func GetAllProcessedCases() ([]byte, int, error) {
-	resp, err := http.Get("http://prediagnostic-be:8000/prediagnostic/cases")
+	resp, err := http.Get(getPrediagnosticURL() + "/prediagnostic/cases")
 
 	if err != nil {
 		return nil, 0, fmt.Errorf("error connecting to prediagnostic service: %v", err)
@@ -59,7 +68,7 @@ func GetAllProcessedCases() ([]byte, int, error) {
 }
 
 func GetPrediagnosticImage(imageFilename string) (*http.Response, error) {
-	url := fmt.Sprintf("http://prediagnostic-be:8000/prediagnostic/image/%s", imageFilename)
+	url := fmt.Sprintf("%s/prediagnostic/image/%s", getPrediagnosticURL(), imageFilename)
 
 	resp, err := http.Get(url)
 	if err != nil {

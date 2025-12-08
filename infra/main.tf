@@ -141,13 +141,15 @@ module "alb_public" {
       health_check_matcher = "200"
       priority             = local.services.api_gateway.priority
       # Máximo 5 paths: usamos wildcards para cubrir más rutas
-      path_patterns        = ["/graphql", "/query", "/auth*", "/prediagnostic/*", "/user*"]
+      # /register NO va aquí - la página se sirve desde web-frontend
+      # Las Server Actions (POST /register) van directo por Cloud Map
+      path_patterns        = ["/graphql", "/query", "/auth/*", "/user*", "/prediagnostic/*"]
       # Rutas cubiertas:
       #   /graphql, /query - GraphQL
-      #   /auth, /auth/* - Autenticación
-      #   /prediagnostic/* - Prediagnóstico
-      #   /userInfo, /userImage, /user* - Usuario
-      # Nota: /register, /upload, /api/* van al frontend que los redirige
+      #   /auth - Login
+      #   /register - Registro de usuarios
+      #   /user* - userInfo, userImage
+      # Nota: /prediagnostic/* se maneja desde el frontend via GraphQL
     }
     "web-frontend" = {
       port                 = local.services.web_frontend.port

@@ -11,6 +11,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -18,6 +19,14 @@ import (
 	"github.com/unobeswarch/businesslogic/internal/graph/generated"
 	"github.com/unobeswarch/businesslogic/internal/graph/model"
 )
+
+// getPrediagnosticURL returns the prediagnostic service URL from env or default
+func getPrediagnosticURL() string {
+	if url := os.Getenv("PREDIAGNOSTIC_SERVICE_URL"); url != "" {
+		return url
+	}
+	return "http://prediagnostic-be:8000"
+}
 
 // CreateDiagnostic is the resolver for the createDiagnostic field.
 func (r *mutationResolver) CreateDiagnostic(ctx context.Context, idPrediagnostico string, input model.DiagnosticInput) (*model.DiagnosticResponse, error) {
@@ -93,7 +102,7 @@ func (r *mutationResolver) UploadImage(ctx context.Context, imagen graphql.Uploa
 
 	writer.Close()
 
-	req, err := http.NewRequest("POST", "http://prediagnostic-be:8000/prediagnostic/process", body)
+	req, err := http.NewRequest("POST", getPrediagnosticURL()+"/prediagnostic/process", body)
 	if err != nil {
 		return false, err
 	}

@@ -9,6 +9,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"os"
 	"path/filepath"
 
 	_ "github.com/lib/pq"
@@ -19,6 +20,15 @@ var (
 	ErrDatosEnviados    = errors.New("VALIDATION_ERROR")
 	ErrTratamientoDatos = errors.New("BUSINESS_RULE_VIOLATION")
 )
+
+// authServiceURL is the base URL for auth-be service
+// Uses AUTH_SERVICE_URL env var, falls back to docker-compose default
+func getAuthServiceURL() string {
+	if url := os.Getenv("AUTH_SERVICE_URL"); url != "" {
+		return url
+	}
+	return "http://auth-be:8081"
+}
 
 type AuthService struct {
 	key []byte
@@ -44,7 +54,7 @@ func NewAuthService() *AuthService {
 // UserExists verifica si el usuario existe en la base de datos relacional
 func (s *AuthService) UserExistsAuthBE(ctx context.Context, userID string) (bool, error) {
 	// Intentar primera con connection string sin URL encoding
-	url := "http://auth-be:8081/userExists"
+	url := getAuthServiceURL() + "/userExists"
 	// Si falla, probar con URL encoding (línea comentada abajo)
 	// db, err := sql.Open("postgres", "postgres://postgres:BDatosPost0912%2B@auth-db:5432/auth_db?sslmode=disable")
 	// Original password (comentada):
@@ -89,7 +99,7 @@ func (s *AuthService) UserExistsAuthBE(ctx context.Context, userID string) (bool
 func (s *AuthService) ValidateTokenWithAuthBE(ctx context.Context, authHeader string, requiredRole string, r *http.Request) (*UserClaims, error) {
 	body, _ := json.Marshal(map[string]string{"required_role": requiredRole})
 
-	req, _ := http.NewRequestWithContext(ctx, "POST", "http://auth-be:8081/validation", bytes.NewBuffer(body))
+	req, _ := http.NewRequestWithContext(ctx, "POST", getAuthServiceURL()+"/validation", bytes.NewBuffer(body))
 	req.Header.Set("Authorization", authHeader)
 	req.Header.Set("Content-Type", "application/json")
 
@@ -154,7 +164,7 @@ func (s *AuthService) ValidateTokenWithAuthBE(ctx context.Context, authHeader st
 func (s *AuthService) Login(ctx context.Context, correo string, contrasena string, r *http.Request) (map[string]interface{}, int, error) {
 	body, _ := json.Marshal(map[string]string{"correo": correo, "contrasena": contrasena})
 
-	req, _ := http.NewRequestWithContext(ctx, "POST", "http://auth-be:8081/auth", bytes.NewBuffer(body))
+	req, _ := http.NewRequestWithContext(ctx, "POST", getAuthServiceURL()+"/auth", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	forwardHeaders := []string{
@@ -198,7 +208,7 @@ func (s *AuthService) Register(ctx context.Context, usuario map[string]interface
 		return nil, 0, err
 	}
 
-	req, _ := http.NewRequestWithContext(ctx, "POST", "http://auth-be:8081/register", bytes.NewBuffer(body))
+	req, _ := http.NewRequestWithContext(ctx, "POST", getAuthServiceURL()+"/register", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
@@ -221,7 +231,7 @@ func (s *AuthService) Register(ctx context.Context, usuario map[string]interface
 }
 
 func (s *AuthService) UserInfo(ctx context.Context, authHeader string, r *http.Request) (map[string]interface{}, int, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", "http://auth-be:8081/userInfo", nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", getAuthServiceURL()+"/userInfo", nil)
 
 	if err != nil {
 		return nil, 0, err
@@ -265,7 +275,7 @@ func (s *AuthService) UserInfo(ctx context.Context, authHeader string, r *http.R
 }
 
 func (s *AuthService) UserImage(ctx context.Context, userID string) ([]byte, string, int, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", "http://auth-be:8081/userImage?id="+userID, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", getAuthServiceURL()+"/userImage?id="+userID, nil)
 	if err != nil {
 		return nil, "", 0, err
 	}
@@ -296,7 +306,7 @@ func UploadUserImage(token string, fileName string, fileData []byte, r *http.Req
 	part.Write(fileData)
 	writer.Close()
 
-	req, err := http.NewRequest("POST", "http://auth-be:8081/upload", body)
+	req, err := http.NewRequest("POST", getAuthServiceURL()+"/upload", body)
 	if err != nil {
 		return nil, err
 	}

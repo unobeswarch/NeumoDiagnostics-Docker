@@ -70,6 +70,8 @@ func main() {
 				ctx = context.WithValue(ctx, "Authorization", authHeader)
 			}
 
+			ctx = context.WithValue(ctx, "httpRequest", r)
+
 			// Continuar con el siguiente handler
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

@@ -98,6 +98,8 @@ func HandlerIniciarSesion(w http.ResponseWriter, r *http.Request) {
 
 	var datos map[string]interface{}
 
+	connection := r.Header.Get("X-Forwarded-For")
+
 	err := json.NewDecoder(r.Body).Decode(&datos)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -108,7 +110,11 @@ func HandlerIniciarSesion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nombre, id, correo, rol, token, err := services.IniciarSesion(datos["correo"].(string), datos["contrasena"].(string))
+	fmt.Println("////////////////////////////////////////////")
+	fmt.Println("Direccion ip: ", connection)
+	fmt.Println("////////////////////////////////////////////")
+
+	nombre, id, correo, rol, token, err := services.IniciarSesion(datos["correo"].(string), datos["contrasena"].(string), connection)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -141,6 +147,8 @@ func HandlerValidacion(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
+	connection := r.Header.Get("X-Forwarded-For")
+
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		http.Error(w, `{"error": "token de autorización requerido"}`, http.StatusUnauthorized)
@@ -155,7 +163,7 @@ func HandlerValidacion(w http.ResponseWriter, r *http.Request) {
 	token := parts[1]
 
 	authService := services.NewAuthService()
-	claims, err := authService.ValidateJWT(token)
+	claims, err := authService.ValidateJWT(token, connection)
 	if err != nil {
 		http.Error(w, `{"error": "token inválido"}`, http.StatusUnauthorized)
 		return
@@ -166,6 +174,7 @@ func HandlerValidacion(w http.ResponseWriter, r *http.Request) {
 		Email:  claims.Email,
 		Role:   claims.Role,
 		Name:   claims.Name,
+		IP:     claims.IP,
 	}
 
 	json.NewEncoder(w).Encode(resp)
@@ -182,6 +191,8 @@ func HandlerGuardarFotoPerfil(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Falta header de autorización", http.StatusUnauthorized)
 		return
 	}
+
+	connection := r.Header.Get("X-Forwarded-For")
 
 	err := r.ParseMultipartForm(10 << 20) // 10 MB
 	if err != nil {
@@ -200,7 +211,7 @@ func HandlerGuardarFotoPerfil(w http.ResponseWriter, r *http.Request) {
 		Key: []byte("asfqwr1242t1weg"),
 	}
 
-	imagenURL, err := authService.GuardarFoto(r.Context(), authHeader, file, fileHeader)
+	imagenURL, err := authService.GuardarFoto(r.Context(), authHeader, file, fileHeader, connection)
 	if err != nil {
 		http.Error(w, "Error guardando foto: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -222,6 +233,8 @@ func HandlerValidarTokenYRol(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	connection := r.Header.Get("X-Forwarded-For")
+
 	parts := strings.Split(authHeader, " ")
 	if len(parts) != 2 || parts[0] != "Bearer" {
 		http.Error(w, `{"error": "formato de token inválido"}`, http.StatusUnauthorized)
@@ -242,7 +255,7 @@ func HandlerValidarTokenYRol(w http.ResponseWriter, r *http.Request) {
 
 	authService := services.NewAuthService()
 
-	claims, err := authService.ValidateJWT(token)
+	claims, err := authService.ValidateJWT(token, connection)
 	if err != nil {
 		http.Error(w, `{"error": "token inválido"}`, http.StatusUnauthorized)
 		return
@@ -369,6 +382,8 @@ func HandlerObtenerUsuario(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	connection := r.Header.Get("X-Forwarded-For")
+
 	authService := services.NewAuthService()
 
 	authHeader := r.Header.Get("Authorization")
@@ -377,7 +392,7 @@ func HandlerObtenerUsuario(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nombre, email, rol, err := authService.RetornarUsuario(r.Context(), authHeader)
+	nombre, email, rol, err := authService.RetornarUsuario(r.Context(), authHeader, connection)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return

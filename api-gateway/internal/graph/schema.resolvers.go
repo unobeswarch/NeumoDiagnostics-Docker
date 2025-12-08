@@ -29,8 +29,10 @@ func (r *mutationResolver) CreateDiagnostic(ctx context.Context, idPrediagnostic
 		}
 	}
 
+	httpReq := ctx.Value("httpRequest").(*http.Request)
+
 	// Validar token y rol de doctor
-	userClaims, err := r.Resolver.AuthSrv.ValidateTokenWithAuthBE(ctx, authHeader, "doctor")
+	userClaims, err := r.Resolver.AuthSrv.ValidateTokenWithAuthBE(ctx, authHeader, "doctor", httpReq)
 	if err != nil {
 		return &model.DiagnosticResponse{
 			Success: false,
@@ -66,7 +68,9 @@ func (r *mutationResolver) UploadImage(ctx context.Context, imagen graphql.Uploa
 		}
 	}
 
-	userClaims, err := r.Resolver.AuthSrv.ValidateTokenWithAuthBE(ctx, authHeader, "paciente")
+	httpReq := ctx.Value("httpRequest").(*http.Request)
+
+	userClaims, err := r.Resolver.AuthSrv.ValidateTokenWithAuthBE(ctx, authHeader, "paciente", httpReq)
 	if err != nil {
 		return false, fmt.Errorf("acceso denegado")
 	}
@@ -127,8 +131,10 @@ func (r *queryResolver) GetCases(ctx context.Context) ([]*model.Case, error) {
 		}
 	}
 
+	httpReq := ctx.Value("httpRequest").(*http.Request)
+
 	// First try to validate as doctor
-	_, err := r.Resolver.AuthSrv.ValidateTokenWithAuthBE(ctx, authHeader, "doctor")
+	_, err := r.Resolver.AuthSrv.ValidateTokenWithAuthBE(ctx, authHeader, "doctor", httpReq)
 	if err == nil {
 		// User is a doctor - return all cases
 		cases, err := r.Resolver.CaseSrv.GetAllCases()
@@ -142,7 +148,7 @@ func (r *queryResolver) GetCases(ctx context.Context) ([]*model.Case, error) {
 	}
 
 	// If not doctor, try to validate as patient
-	userClaims, err := r.Resolver.AuthSrv.ValidateTokenWithAuthBE(ctx, authHeader, "paciente")
+	userClaims, err := r.Resolver.AuthSrv.ValidateTokenWithAuthBE(ctx, authHeader, "paciente", httpReq)
 	if err != nil {
 		return nil, fmt.Errorf("acceso denegado: %w", err)
 	}
@@ -184,8 +190,10 @@ func (r *queryResolver) CaseDetail(ctx context.Context, id string) (*model.CaseD
 		}
 	}
 
+	httpReq := ctx.Value("httpRequest").(*http.Request)
+
 	// Validar token y rol de paciente
-	userClaims, err := r.Resolver.AuthSrv.ValidateTokenWithAuthBE(ctx, authHeader, "paciente")
+	userClaims, err := r.Resolver.AuthSrv.ValidateTokenWithAuthBE(ctx, authHeader, "paciente", httpReq)
 	if err != nil {
 		return nil, fmt.Errorf("acceso denegado: %w", err)
 	}

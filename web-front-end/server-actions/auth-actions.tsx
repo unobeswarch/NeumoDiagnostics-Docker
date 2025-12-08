@@ -11,6 +11,7 @@ interface User {
 
 import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
+import { headers } from "next/headers"
 
 export async function register(userData: any) {
     try {
@@ -50,9 +51,20 @@ export async function login(formData: FormData): Promise<void> {
   console.log(correo)
   console.log(contrasena)
 
+  const h = headers()
+
+  const realIp = h.get("x-real-ip") || h.get("x-forwarded-for") || null
+  
+  const userAgent = h.get("user-agent") || ""
+
   const response = await fetch("http://reverse-proxy/auth", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      "X-Real-IP": realIp || "",
+      "X-Forwarded-For": realIp || "",
+      "User-Agent": userAgent,
+    },
     body: JSON.stringify({ correo, contrasena }),
     cache: "no-store"
   })
@@ -69,9 +81,26 @@ export async function login(formData: FormData): Promise<void> {
   console.log(data.rol)
   console.log(data.user_id)
 
-  cookies().set("auth-token", data.token, { path: "/" })
-  cookies().set("user-role", data.rol, { path: "/" })
-  cookies().set("user-id", data.user_id, { path: "/" })
+  cookies().set("auth-token", data.token, { 
+    path: "/",
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+   })
+   
+  cookies().set("user-role", data.rol, { 
+    path: "/",
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+   })
+
+  cookies().set("user-id", data.user_id, { 
+    path: "/",
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+   })
 
   if (data.rol === "paciente") redirect("/patient/dashboard")
   if (data.rol === "doctor") redirect("/doctor/dashboard")
@@ -94,11 +123,20 @@ export async function getUserFromToken() {
 
   if (!token || !user_id) return null;
 
+  const h = headers()
+
+  const realIp = h.get("x-real-ip") || h.get("x-forwarded-for") || null
+  
+  const userAgent = h.get("user-agent") || ""
+
   const res = await fetch("http://reverse-proxy/userInfo", {
     method: "GET",
     headers: {
       "Authorization": `Bearer ${token}`,
       "Content-Type": "application/json",
+      "X-Real-IP": realIp || "",
+      "X-Forwarded-For": realIp || "",
+      "User-Agent": userAgent,
     },
   });
 

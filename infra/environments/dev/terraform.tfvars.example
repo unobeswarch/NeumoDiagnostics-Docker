@@ -1,0 +1,25 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# NEUMODIAGNOSTICS - VARIABLES DE DESARROLLO
+# ═══════════════════════════════════════════════════════════════════════════════
+# Copiar este archivo a terraform.tfvars y completar los valores
+# ⚠️  NO COMMITEAR terraform.tfvars al repositorio
+# ═══════════════════════════════════════════════════════════════════════════════
+
+aws_region = "us-east-1"
+
+# Base de datos PostgreSQL (Auth)
+db_username = "neumo_dev"
+db_password = "CAMBIAR_POR_PASSWORD_SEGURO"
+
+# DocumentDB (Prediagnostic)
+docdb_master_username = "neumo_docdb"
+docdb_master_password = "CAMBIAR_POR_PASSWORD_SEGURO"
+
+# RabbitMQ
+mq_username = "neumo_mq"
+mq_password = "CAMBIAR_POR_PASSWORD_SEGURO"
+
+# SMTP (Mailgun u otro)
+smtp_username = "postmaster@sandbox.mailgun.org"
+smtp_password = "CAMBIAR_POR_API_KEY"
+

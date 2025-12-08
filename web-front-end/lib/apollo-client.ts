@@ -1,12 +1,26 @@
 // Cliente GraphQL simple usando fetch API
-// Conecta al reverse-proxy que balancea entre las instancias del API Gateway
+// Conecta al API Gateway a través de la URL configurada
 
-const GRAPHQL_URL = 'http://reverse-proxy/graphql'; // Load balancer endpoint
-
-import { headers } from "next/headers";
+// Use environment variable for API URL, fallback to localhost for development
+const getGraphQLUrl = () => {
+  // Client-side: use public env var
+  if (typeof window !== 'undefined') {
+    return process.env.NEXT_PUBLIC_API_URL 
+      ? `${process.env.NEXT_PUBLIC_API_URL}/graphql`
+      : 'http://localhost:8080/graphql';
+  }
+  // Server-side: use internal service URL or public URL
+  return process.env.SERVER_API_URL 
+    ? `${process.env.SERVER_API_URL}/graphql`
+    : process.env.NEXT_PUBLIC_API_URL 
+      ? `${process.env.NEXT_PUBLIC_API_URL}/graphql`
+      : 'http://localhost:8080/graphql';
+};
 
 export class GraphQLClient {
   static async query<T = any>(query: string, variables?: any, token?: string): Promise<T> {
+    const GRAPHQL_URL = getGraphQLUrl();
+    
     console.log(`🚀 GraphQL Query iniciada...`);
     console.log(`🔗 URL: ${GRAPHQL_URL}`);
     console.log(`📝 Query:`, query);
@@ -19,24 +33,15 @@ export class GraphQLClient {
       };
       
       console.log(`📤 Enviando request:`, requestBody);
-      
-      // Obtener token JWT de las cookies para autenticación
 
-      const requestheaders: HeadersInit = {
+      const requestHeaders: HeadersInit = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       };
 
-      // Agregar token JWT si está disponible
+      // Add JWT token if available
       if (token) {
-        const h = headers()
-        const realIp = h.get("x-real-ip") || h.get("x-forwarded-for") || null
-        const userAgent = h.get("user-agent") || ""
-        
-        requestheaders['Authorization'] = `Bearer ${token}`
-        requestheaders["X-Real-IP"]= realIp || ""
-        requestheaders["X-Forwarded-For"]= realIp || ""
-        requestheaders["User-Agent"]= userAgent
+        requestHeaders['Authorization'] = `Bearer ${token}`;
         console.log(`🔐 JWT Token agregado a headers`);
       } else {
         console.log(`⚠️ No JWT token found - request may fail for authenticated queries`);
@@ -44,10 +49,9 @@ export class GraphQLClient {
 
       const response = await fetch(GRAPHQL_URL, {
         method: 'POST',
-        headers: requestheaders,
+        headers: requestHeaders,
         body: JSON.stringify(requestBody),
-        credentials: 'omit', // Sin credenciales para evitar problemas
-        mode: 'cors', // Explícitamente CORS
+        cache: 'no-store',
       });
 
       console.log(`📥 Response status: ${response.status}`);
@@ -72,9 +76,9 @@ export class GraphQLClient {
     } catch (error) {
       console.error('❌ GraphQL request failed:', error);
       
-      // Si es un error de red, dar más detalles
+      // Network error details
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        console.error('🌐 Error de conexión: ¿Está corriendo el backend en localhost:8080?');
+        console.error('🌐 Error de conexión: ¿Está corriendo el backend?');
       }
       
       throw error;

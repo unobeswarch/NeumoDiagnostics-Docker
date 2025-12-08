@@ -1,0 +1,103 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# NEUMODIAGNOSTICS - TERRAFORM VARIABLES (EJEMPLO)
+# ═══════════════════════════════════════════════════════════════════════════════
+# Copia este archivo a terraform.tfvars y completa los valores sensibles
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GENERAL
+# ─────────────────────────────────────────────────────────────────────────────
+project_name = "neumo"
+environment  = "dev"
+aws_region   = "us-east-1"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NETWORKING
+# ─────────────────────────────────────────────────────────────────────────────
+vpc_cidr             = "10.0.0.0/16"
+availability_zones   = ["us-east-1a", "us-east-1b"]
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnet_cidrs = ["10.0.10.0/24", "10.0.20.0/24"]
+enable_nat_gateway   = true
+single_nat_gateway   = true  # true para dev (ahorra costos)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RDS - AUTH DATABASE (⚠️ CAMBIAR EN PRODUCCIÓN)
+# ─────────────────────────────────────────────────────────────────────────────
+db_name     = "auth_db"
+db_username = "postgres"
+db_password = "CHANGE_ME_IN_PRODUCTION_123!"  # ⚠️ CAMBIAR
+
+rds_instance_class        = "db.t3.micro"  # t3.medium para prod
+rds_allocated_storage     = 20
+rds_max_allocated_storage = 100
+rds_multi_az              = false  # true para prod (Warm Spare Pattern)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DOCUMENTDB - PREDIAGNOSTIC DATABASE (⚠️ CAMBIAR EN PRODUCCIÓN)
+# ─────────────────────────────────────────────────────────────────────────────
+docdb_master_username = "neumo_docdb"
+docdb_master_password = "CHANGE_ME_IN_PRODUCTION_456!"  # ⚠️ CAMBIAR
+
+docdb_instance_class = "db.t3.medium"
+docdb_instance_count = 1  # 2 o más para prod
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AMAZON MQ - RABBITMQ (⚠️ CAMBIAR EN PRODUCCIÓN)
+# ─────────────────────────────────────────────────────────────────────────────
+mq_username = "neumo_mq"
+mq_password = "CHANGE_ME_IN_PRODUCTION_789!"  # ⚠️ CAMBIAR
+
+mq_instance_type   = "mq.t3.micro"
+mq_deployment_mode = "SINGLE_INSTANCE"  # ACTIVE_STANDBY_MULTI_AZ para prod
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SMTP - NOTIFICATION SERVICE (⚠️ CONFIGURAR)
+# ─────────────────────────────────────────────────────────────────────────────
+smtp_host     = "smtp.mailgun.org"
+smtp_port     = 587
+smtp_username = "postmaster@your-domain.mailgun.org"  # ⚠️ CAMBIAR
+smtp_password = "YOUR_SMTP_PASSWORD"  # ⚠️ CAMBIAR
+email_from    = "notification@neumodiagnostics.com"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ECS - API GATEWAY (Escenario 1: Hot Spare)
+# ─────────────────────────────────────────────────────────────────────────────
+api_gateway_desired_count = 3   # Mínimo 3 para Hot Spare
+api_gateway_cpu           = 512
+api_gateway_memory        = 1024
+api_gateway_min_capacity  = 2
+api_gateway_max_capacity  = 6
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ECS - PREDIAGNOSTIC BACKEND (Escenario 3: Cluster N+1)
+# ─────────────────────────────────────────────────────────────────────────────
+prediagnostic_be_desired_count = 4  # N+1 donde N=3
+prediagnostic_be_cpu           = 1024
+prediagnostic_be_memory        = 2048
+prediagnostic_min_capacity     = 4
+prediagnostic_max_capacity     = 10
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ECS - OTROS SERVICIOS
+# ─────────────────────────────────────────────────────────────────────────────
+auth_be_desired_count           = 2
+notification_be_desired_count   = 2
+message_producer_desired_count  = 2
+web_frontend_desired_count      = 2
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DOMINIO (OPCIONAL)
+# ─────────────────────────────────────────────────────────────────────────────
+domain_name     = ""  # Ejemplo: "neumodiagnostics.com"
+create_dns_zone = false
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TAGS
+# ─────────────────────────────────────────────────────────────────────────────
+additional_tags = {
+  Course  = "Software Architecture"
+  Team    = "NeumoDiagnostics"
+  Owner   = "student@university.edu"
+}
+

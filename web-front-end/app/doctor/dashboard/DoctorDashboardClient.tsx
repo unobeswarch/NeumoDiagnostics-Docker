@@ -3,14 +3,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { FileImage, Clock, CheckCircle, AlertTriangle, ArrowRight, TrendingUp, Activity } from "lucide-react"
+import { Clock, CheckCircle, AlertTriangle, ArrowRight, TrendingUp, Activity } from "lucide-react"
 import { DoctorHeader } from "@/components/doctor-header"
 import Link from "next/link"
-import { GraphQLClient } from '@/lib/apollo-client'
-import { GET_CASES, Case, GetCasesResponse } from '@/lib/get-cases-query'
-import { getUserFromToken } from "@/server-actions/auth-actions"
-import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
 
 // Interface for real case data from backend
 interface RealCase {
@@ -47,7 +42,7 @@ interface DoctorDashboardClientProps {
 }
 
 
-export default async function DoctorDashboardClient({currentUser, convertedCases, completedCaseDetails}: DoctorDashboardClientProps) {
+export default function DoctorDashboardClient({currentUser, convertedCases, completedCaseDetails}: DoctorDashboardClientProps) {
 
   // Verificar si hay un ID de prueba en la URL - redirigir a página de detalle
 

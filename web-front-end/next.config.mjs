@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable standalone output for Docker deployment
+  output: 'standalone',
+  
   // Configuración para permitir conexiones al backend en desarrollo
   async rewrites() {
     return [

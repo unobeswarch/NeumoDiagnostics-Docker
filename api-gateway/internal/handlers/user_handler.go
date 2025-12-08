@@ -21,7 +21,7 @@ func HandlerLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authService := services.NewAuthService()
-	result, status, err := authService.Login(r.Context(), creds["correo"], creds["contrasena"])
+	result, status, err := authService.Login(r.Context(), creds["correo"], creds["contrasena"], r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -71,7 +71,7 @@ func HandlerUserInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authService := services.NewAuthService()
-	result, status, err := authService.UserInfo(r.Context(), authHeader)
+	result, status, err := authService.UserInfo(r.Context(), authHeader, r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -151,7 +151,7 @@ func HandlerUploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := services.UploadUserImage(authHeader, fileHeader.Filename, fileBytes)
+	resp, err := services.UploadUserImage(authHeader, fileHeader.Filename, fileBytes, r)
 	if err != nil {
 		http.Error(w, "Error enviando archivo al AuthService: "+err.Error(), http.StatusInternalServerError)
 		return

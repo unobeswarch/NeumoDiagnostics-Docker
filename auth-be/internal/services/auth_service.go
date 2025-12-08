@@ -34,6 +34,7 @@ type UserClaims struct {
 	Email  string
 	Role   string
 	Name   string
+	IP     string
 }
 
 func RegistrarUsuario(u models.User) (int, time.Time, error) {
@@ -96,7 +97,15 @@ func RegistrarUsuario(u models.User) (int, time.Time, error) {
 	return id, fechaCreacion, nil
 }
 
-func IniciarSesion(correo string, contrasena string) (string, int, string, string, string, error) {
+func getClientIP(direcciones string) string {
+	if direcciones != "" {
+		parts := strings.Split(direcciones, ",")
+		return strings.TrimSpace(parts[0])
+	}
+	return ""
+}
+
+func IniciarSesion(correo string, contrasena string, conexion string) (string, int, string, string, string, error) {
 	// db, err := sql.Open("postgres", "postgres://postgres:BDatosPost0912%2B@auth-db:5432/auth_db?sslmode=disable")
 	db, err := sql.Open("postgres", "host=auth-db port=5432 user=postgres password=123 dbname=auth_db sslmode=disable")
 	// Original:
@@ -112,6 +121,7 @@ func IniciarSesion(correo string, contrasena string) (string, int, string, strin
 		correo_usuario     string
 		rol_usuario        string
 		nombre_completo    string
+		IP                 string
 	)
 
 	query := `SELECT nombre_completo, id, correo, contrasena, rol FROM usuarios WHERE correo=$1`
@@ -123,6 +133,13 @@ func IniciarSesion(correo string, contrasena string) (string, int, string, strin
 		}
 		return "", 0, "", "", "", err
 	}
+
+	IP = getClientIP(conexion)
+
+	fmt.Println("////////////////////////////////////////////")
+	fmt.Println("IP del cliente ", IP)
+	fmt.Println("////////////////////////////////////////////")
+
 	err = bcrypt.CompareHashAndPassword([]byte(contrasena_usuario), []byte(contrasena))
 	if err != nil {
 		return "", 0, "", "", "", err
@@ -136,6 +153,7 @@ func IniciarSesion(correo string, contrasena string) (string, int, string, strin
 		"id_usuario":      id_usuario,
 		"email":           correo_usuario,
 		"rol":             rol_usuario,
+		"ip":              IP,
 		"nombre_completo": nombre_completo,
 		"exp":             time.Now().Add(time.Hour * 24).Unix(),
 	})
@@ -174,6 +192,7 @@ func (s *AuthService) UserExists(ctx context.Context, userID string) (bool, erro
 }
 
 // ValidateTokenAndRole valida el token de autorización y verifica el rol
+/*
 func (s *AuthService) ValidateTokenAndRole(ctx context.Context, authHeader string, requiredRole string) (*UserClaims, error) {
 	if authHeader == "" {
 		return nil, errors.New("token de autorización requerido")
@@ -200,11 +219,13 @@ func (s *AuthService) ValidateTokenAndRole(ctx context.Context, authHeader strin
 
 	return userClaims, nil
 }
-
-func (s *AuthService) ValidateJWT(token string) (*UserClaims, error) {
+*/
+func (s *AuthService) ValidateJWT(token string, conexion string) (*UserClaims, error) {
 	var auth AuthService = AuthService{
 		Key: []byte("asfqwr1242t1weg"),
 	}
+
+	ipCliente := getClientIP(conexion)
 
 	tkn, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
 		return auth.Key, nil
@@ -215,15 +236,33 @@ func (s *AuthService) ValidateJWT(token string) (*UserClaims, error) {
 
 	claims := tkn.Claims.(jwt.MapClaims)
 
+	ipToken := fmt.Sprintf("%v", claims["ip"])
+	fmt.Println("////////////////////////////////////////////")
+	fmt.Println("IP cliente: ", ipCliente)
+	fmt.Println("IP token: ", ipToken)
+	fmt.Println("////////////////////////////////////////////")
+
+	if ipToken != ipCliente {
+		fmt.Println("////////////////////////////////////////////")
+		fmt.Println("Las IP's no coinciden")
+		fmt.Println("////////////////////////////////////////////")
+		return nil, fmt.Errorf("token usado desde otra IP")
+	}
+
+	fmt.Println("////////////////////////////////////////////")
+	fmt.Println("Las IP's coinciden")
+	fmt.Println("////////////////////////////////////////////")
+
 	return &UserClaims{
 		UserID: fmt.Sprintf("%v", claims["id_usuario"]),
 		Email:  fmt.Sprintf("%v", claims["email"]),
 		Role:   fmt.Sprintf("%v", claims["rol"]),
 		Name:   fmt.Sprintf("%v", claims["nombre_completo"]),
+		IP:     fmt.Sprintf("%v", claims["ip"]),
 	}, nil
 }
 
-func (s *AuthService) GuardarFoto(ctx context.Context, authHeader string, file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
+func (s *AuthService) GuardarFoto(ctx context.Context, authHeader string, file multipart.File, fileHeader *multipart.FileHeader, conexion string) (string, error) {
 	// db, err := sql.Open("postgres", "postgres://postgres:BDatosPost0912%2B@auth-db:5432/auth_db?sslmode=disable")
 	db, err := sql.Open("postgres", "postgres://postgres:123@auth-db:5432/auth_db?sslmode=disable")
 	if err != nil {
@@ -244,7 +283,7 @@ func (s *AuthService) GuardarFoto(ctx context.Context, authHeader string, file m
 
 	token := parts[1]
 
-	userClaims, err := s.ValidateJWT(token)
+	userClaims, err := s.ValidateJWT(token, conexion)
 
 	uploadDir := "./uploads"
 	err = os.MkdirAll(uploadDir, os.ModePerm)
@@ -297,7 +336,7 @@ func (s *AuthService) RetornarFoto(ctx context.Context, userID string) (string, 
 	return imagePath, nil
 }
 
-func (s *AuthService) RetornarUsuario(ctx context.Context, authHeader string) (string, string, string, error) {
+func (s *AuthService) RetornarUsuario(ctx context.Context, authHeader string, conexion string) (string, string, string, error) {
 	db, err := sql.Open("postgres", "host=auth-db port=5432 user=postgres password=123 dbname=auth_db sslmode=disable")
 	// db, err := sql.Open("postgres", "postgres://postgres:BDatosPost0912%2B@auth-db:5432/auth_db?sslmode=disable")
 	if err != nil {
@@ -316,7 +355,7 @@ func (s *AuthService) RetornarUsuario(ctx context.Context, authHeader string) (s
 
 	token := parts[1]
 
-	userClaims, err := s.ValidateJWT(token)
+	userClaims, err := s.ValidateJWT(token, conexion)
 
 	id_user := userClaims.UserID
 	var nombre string

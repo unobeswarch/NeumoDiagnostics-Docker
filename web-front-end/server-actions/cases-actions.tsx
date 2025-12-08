@@ -12,6 +12,7 @@ import { DiagnosticPayload} from '@/lib/diagnostic-service';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getUserFromToken } from './auth-actions';
+import { headers } from 'next/headers';
 
 interface ResultadosModelo {
   probNeumonia: number
@@ -161,13 +162,22 @@ export async function UploadRadiographyImage(formData: FormData) {
     redirect("/login");
   }
 
+  const h = headers()
+  
+    const realIp = h.get("x-real-ip") || h.get("x-forwarded-for") || null
+    
+    const userAgent = h.get("user-agent") || ""
+
   try {
     const response = await fetch("http://reverse-proxy/query", {
       method: "POST",
       body: formData,
       headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      "Authorization": `Bearer ${token}`,
+      "X-Real-IP": realIp || "",
+      "X-Forwarded-For": realIp || "",
+      "User-Agent": userAgent,
+    },
     })
     const result = await response.json()
     return result

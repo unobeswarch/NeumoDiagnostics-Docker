@@ -3,6 +3,8 @@
 
 const GRAPHQL_URL = 'http://reverse-proxy/graphql'; // Load balancer endpoint
 
+import { headers } from "next/headers";
+
 export class GraphQLClient {
   static async query<T = any>(query: string, variables?: any, token?: string): Promise<T> {
     console.log(`🚀 GraphQL Query iniciada...`);
@@ -20,14 +22,21 @@ export class GraphQLClient {
       
       // Obtener token JWT de las cookies para autenticación
 
-      const headers: HeadersInit = {
+      const requestheaders: HeadersInit = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       };
 
       // Agregar token JWT si está disponible
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        const h = headers()
+        const realIp = h.get("x-real-ip") || h.get("x-forwarded-for") || null
+        const userAgent = h.get("user-agent") || ""
+        
+        requestheaders['Authorization'] = `Bearer ${token}`
+        requestheaders["X-Real-IP"]= realIp || ""
+        requestheaders["X-Forwarded-For"]= realIp || ""
+        requestheaders["User-Agent"]= userAgent
         console.log(`🔐 JWT Token agregado a headers`);
       } else {
         console.log(`⚠️ No JWT token found - request may fail for authenticated queries`);
@@ -35,7 +44,7 @@ export class GraphQLClient {
 
       const response = await fetch(GRAPHQL_URL, {
         method: 'POST',
-        headers,
+        headers: requestheaders,
         body: JSON.stringify(requestBody),
         credentials: 'omit', // Sin credenciales para evitar problemas
         mode: 'cors', // Explícitamente CORS

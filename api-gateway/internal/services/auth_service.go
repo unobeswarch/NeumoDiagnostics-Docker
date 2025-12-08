@@ -86,12 +86,27 @@ func (s *AuthService) UserExistsAuthBE(ctx context.Context, userID string) (bool
 	return res.Exists, nil
 }
 
-func (s *AuthService) ValidateTokenWithAuthBE(ctx context.Context, authHeader string, requiredRole string) (*UserClaims, error) {
+func (s *AuthService) ValidateTokenWithAuthBE(ctx context.Context, authHeader string, requiredRole string, r *http.Request) (*UserClaims, error) {
 	body, _ := json.Marshal(map[string]string{"required_role": requiredRole})
 
 	req, _ := http.NewRequestWithContext(ctx, "POST", "http://auth-be:8081/validation", bytes.NewBuffer(body))
 	req.Header.Set("Authorization", authHeader)
 	req.Header.Set("Content-Type", "application/json")
+
+	forwardHeaders := []string{
+		"X-Real-IP",
+		"X-Forwarded-For",
+		"X-Forwarded-Proto",
+		"User-Agent",
+		"Accept",
+		"Cookie",
+	}
+
+	for _, h := range forwardHeaders {
+		if v := r.Header.Get(h); v != "" {
+			req.Header.Set(h, v)
+		}
+	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -136,11 +151,27 @@ func (s *AuthService) ValidateTokenWithAuthBE(ctx context.Context, authHeader st
 	}
 }
 
-func (s *AuthService) Login(ctx context.Context, correo string, contrasena string) (map[string]interface{}, int, error) {
+func (s *AuthService) Login(ctx context.Context, correo string, contrasena string, r *http.Request) (map[string]interface{}, int, error) {
 	body, _ := json.Marshal(map[string]string{"correo": correo, "contrasena": contrasena})
 
 	req, _ := http.NewRequestWithContext(ctx, "POST", "http://auth-be:8081/auth", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
+
+	forwardHeaders := []string{
+		"X-Real-IP",
+		"X-Forwarded-For",
+		"X-Forwarded-Proto",
+		"User-Agent",
+		"Accept",
+		"Cookie",
+		"Authorization",
+	}
+
+	for _, h := range forwardHeaders {
+		if v := r.Header.Get(h); v != "" {
+			req.Header.Set(h, v)
+		}
+	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -189,7 +220,7 @@ func (s *AuthService) Register(ctx context.Context, usuario map[string]interface
 	return result, resp.StatusCode, nil
 }
 
-func (s *AuthService) UserInfo(ctx context.Context, authHeader string) (map[string]interface{}, int, error) {
+func (s *AuthService) UserInfo(ctx context.Context, authHeader string, r *http.Request) (map[string]interface{}, int, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", "http://auth-be:8081/userInfo", nil)
 
 	if err != nil {
@@ -198,6 +229,21 @@ func (s *AuthService) UserInfo(ctx context.Context, authHeader string) (map[stri
 
 	req.Header.Set("Authorization", authHeader)
 	req.Header.Set("Content-Type", "application/json")
+
+	forwardHeaders := []string{
+		"X-Real-IP",
+		"X-Forwarded-For",
+		"X-Forwarded-Proto",
+		"User-Agent",
+		"Accept",
+		"Cookie",
+	}
+
+	for _, h := range forwardHeaders {
+		if v := r.Header.Get(h); v != "" {
+			req.Header.Set(h, v)
+		}
+	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -240,7 +286,7 @@ func (s *AuthService) UserImage(ctx context.Context, userID string) ([]byte, str
 	return body, contentType, resp.StatusCode, nil
 }
 
-func UploadUserImage(token string, fileName string, fileData []byte) (*http.Response, error) {
+func UploadUserImage(token string, fileName string, fileData []byte, r *http.Request) (*http.Response, error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 	part, err := writer.CreateFormFile("foto", filepath.Base(fileName))
@@ -257,6 +303,21 @@ func UploadUserImage(token string, fileName string, fileData []byte) (*http.Resp
 
 	req.Header.Set("Authorization", token)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	forwardHeaders := []string{
+		"X-Real-IP",
+		"X-Forwarded-For",
+		"X-Forwarded-Proto",
+		"User-Agent",
+		"Accept",
+		"Cookie",
+	}
+
+	for _, h := range forwardHeaders {
+		if v := r.Header.Get(h); v != "" {
+			req.Header.Set(h, v)
+		}
+	}
 
 	client := &http.Client{}
 	return client.Do(req)

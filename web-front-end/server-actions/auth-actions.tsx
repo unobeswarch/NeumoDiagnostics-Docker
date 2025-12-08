@@ -13,9 +13,12 @@ import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
 import { headers } from "next/headers"
 
+// API URL for server-side requests (Cloud Map in AWS, reverse-proxy in docker-compose)
+const API_URL = process.env.SERVER_API_URL || "http://reverse-proxy"
+
 export async function register(userData: any) {
     try {
-      const responseRegister = await fetch("http://reverse-proxy/register", {
+      const responseRegister = await fetch(`${API_URL}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
@@ -57,7 +60,7 @@ export async function login(formData: FormData): Promise<void> {
   
   const userAgent = h.get("user-agent") || ""
 
-  const response = await fetch("http://reverse-proxy/auth", {
+  const response = await fetch(`${API_URL}/auth`, {
     method: "POST",
     headers: { 
       "Content-Type": "application/json",
@@ -129,7 +132,7 @@ export async function getUserFromToken() {
   
   const userAgent = h.get("user-agent") || ""
 
-  const res = await fetch("http://reverse-proxy/userInfo", {
+  const res = await fetch(`${API_URL}/userInfo`, {
     method: "GET",
     headers: {
       "Authorization": `Bearer ${token}`,
@@ -146,7 +149,7 @@ export async function getUserFromToken() {
 
   console.log("📥 UserInfo response:", data);  // Debug log
 
-  const avatarUrl = `http://reverse-proxy/userImage?id=${user_id}`
+  const avatarUrl = `${API_URL}/userImage?id=${user_id}`
 
   return {
     id: user_id,

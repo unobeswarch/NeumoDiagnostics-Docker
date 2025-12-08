@@ -14,6 +14,9 @@ import { redirect } from 'next/navigation';
 import { getUserFromToken } from './auth-actions';
 import { headers } from 'next/headers';
 
+// API URL for server-side requests (Cloud Map in AWS, reverse-proxy in docker-compose)
+const API_URL = process.env.SERVER_API_URL || "http://reverse-proxy"
+
 interface ResultadosModelo {
   probNeumonia: number
   etiqueta: string
@@ -95,7 +98,7 @@ export async function getCaseDetail(id: string, token: string): Promise<GetCaseD
 
 export async function getAllCases(){
   try {
-    const response = await fetch("http://reverse-proxy/prediagnostic/cases")
+    const response = await fetch(`${API_URL}/prediagnostic/cases`)
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -169,7 +172,7 @@ export async function UploadRadiographyImage(formData: FormData) {
     const userAgent = h.get("user-agent") || ""
 
   try {
-    const response = await fetch("http://reverse-proxy/query", {
+    const response = await fetch(`${API_URL}/query`, {
       method: "POST",
       body: formData,
       headers: {
@@ -199,7 +202,7 @@ export async function getDiagnostic(id:string) {
   }
   
   try {
-    const response = await fetch(`http://reverse-proxy/prediagnostic/diagnostic/${id}`)
+    const response = await fetch(`${API_URL}/prediagnostic/diagnostic/${id}`)
     const result = await response.json()
     return result
     

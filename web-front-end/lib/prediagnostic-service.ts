@@ -11,7 +11,7 @@ export class PreDiagnosticService {
 
   static async debugConnection(id: string): Promise<any> {
     console.log(`🔍 DEBUG: Intentando conectar con backend para ID: ${id}`);
-    console.log(`🔗 DEBUG: URL del GraphQL Client:`, 'http://reverse-proxy/graphql');
+    console.log(`🔗 DEBUG: URL del GraphQL Client:`, process.env.SERVER_API_URL || 'http://reverse-proxy');
     
     try {
       console.log(`📝 DEBUG: Query que se enviará:`, GET_PREDIAGNOSTIC);

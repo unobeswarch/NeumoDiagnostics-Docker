@@ -15,7 +15,8 @@ export interface Case {
 }
 
 export class CasesService {
-  private static readonly BASE_URL = "http://reverse-proxy" // Load balancer endpoint
+  // API URL: Uses SERVER_API_URL in AWS (Cloud Map), falls back to reverse-proxy for docker-compose
+  private static readonly BASE_URL = process.env.SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://reverse-proxy"
 
   /**
    * Fetches all pending cases from the backend

@@ -80,9 +80,9 @@ output "mongodb_endpoint" {
 # ─────────────────────────────────────────────────────────────────────────────
 # MESSAGE BROKER
 # ─────────────────────────────────────────────────────────────────────────────
-output "mq_endpoint" {
-  description = "Endpoint de Amazon MQ (RabbitMQ)"
-  value       = module.mq.primary_endpoint
+output "rabbitmq_endpoint" {
+  description = "Endpoint de RabbitMQ (via Cloud Map)"
+  value       = "rabbitmq.${local.service_discovery_namespace}:5672"
 }
 
 # ─────────────────────────────────────────────────────────────────────────────

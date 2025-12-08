@@ -261,9 +261,10 @@ variable "db_username" {
 }
 
 variable "db_password" {
-  description = "Contraseña del usuario maestro"
+  description = "Contraseña del usuario maestro (set via TF_VAR_db_password)"
   type        = string
   sensitive   = true
+  default     = "Nm0Auth#Dev2024$X"  # Default for dev, override in production
 }
 
 variable "db_name" {
@@ -295,9 +296,10 @@ variable "docdb_master_username" {
 }
 
 variable "docdb_master_password" {
-  description = "Contraseña del usuario maestro DocumentDB"
+  description = "Contraseña del usuario maestro DocumentDB (not used - using MongoDB ECS)"
   type        = string
   sensitive   = true
+  default     = "NotUsed123!"  # Not used - MongoDB ECS doesn't require auth in dev
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -323,9 +325,10 @@ variable "mq_username" {
 }
 
 variable "mq_password" {
-  description = "Contraseña de RabbitMQ"
+  description = "Contraseña de RabbitMQ (not used - using RabbitMQ ECS with guest/guest)"
   type        = string
   sensitive   = true
+  default     = "guest"  # RabbitMQ ECS uses guest/guest like docker-compose
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -350,9 +353,10 @@ variable "smtp_username" {
 }
 
 variable "smtp_password" {
-  description = "Contraseña SMTP"
+  description = "Contraseña SMTP (optional - set via TF_VAR_smtp_password)"
   type        = string
   sensitive   = true
+  default     = ""  # Optional - email notifications won't work without this
 }
 
 variable "email_from" {

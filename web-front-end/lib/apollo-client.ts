@@ -33,7 +33,7 @@ export class GraphQLClient {
       };
       
       console.log(`📤 Enviando request:`, requestBody);
-
+      
       const requestHeaders: HeadersInit = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',

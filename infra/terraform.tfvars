@@ -29,7 +29,8 @@ single_nat_gateway = true  # AHORRO: ~$32/mes menos
 # ─────────────────────────────────────────────────────────────────────────────
 db_name     = "auth_db"
 db_username = "postgres"
-db_password = "NeumoSecure2024!"  # ⚠️ CAMBIAR EN PRODUCCIÓN
+# ⚠️ SET VIA ENVIRONMENT: export TF_VAR_db_password="YourSecurePassword"
+# db_password = ""  # Set via TF_VAR_db_password environment variable
 
 # db.t3.micro es elegible para Free Tier (750 horas/mes gratis por 12 meses)
 rds_instance_class        = "db.t3.micro"
@@ -38,32 +39,24 @@ rds_max_allocated_storage = 20  # Sin auto-scaling para ahorrar
 rds_multi_az              = false  # AHORRO: Multi-AZ duplica el costo
 
 # ─────────────────────────────────────────────────────────────────────────────
-# DOCUMENTDB - PREDIAGNOSTIC DATABASE 
-# ⚠️ DocumentDB NO tiene Free Tier - es el más caro (~$57/mes)
-# ALTERNATIVA: Podrías usar MongoDB en un contenedor ECS (~$15/mes)
+# MONGODB ECS (Reemplaza DocumentDB para Free Tier)
 # ─────────────────────────────────────────────────────────────────────────────
-docdb_master_username = "neumo_docdb"
-docdb_master_password = "NeumoDocDB2024!"  # ⚠️ CAMBIAR
-
-docdb_instance_class = "db.t3.medium"  # Mínimo soportado
-docdb_instance_count = 1  # Solo 1 instancia para ahorrar
+# MongoDB corre en ECS Fargate (~$5/mes vs ~$57/mes de DocumentDB)
+# Sin autenticación en dev (similar a docker-compose local)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# AMAZON MQ - RABBITMQ
+# RABBITMQ ECS (Reemplaza Amazon MQ para Free Tier)
 # ─────────────────────────────────────────────────────────────────────────────
-mq_username = "neumo_mq"
-mq_password = "NeumoMQ2024!"  # ⚠️ CAMBIAR
-
-mq_instance_type   = "mq.t3.micro"  # El más pequeño (~$22/mes)
-mq_deployment_mode = "SINGLE_INSTANCE"  # Sin HA para ahorrar
+# RabbitMQ corre en ECS Fargate (~$5/mes vs ~$40/mes de Amazon MQ)
+# Credenciales: guest/guest (igual que docker-compose local)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# SMTP - NOTIFICATION SERVICE
+# SMTP - NOTIFICATION SERVICE (OPTIONAL)
 # ─────────────────────────────────────────────────────────────────────────────
 smtp_host     = "smtp.mailgun.org"
 smtp_port     = 587
-smtp_username = "postmaster@your-domain.mailgun.org"  # ⚠️ CAMBIAR
-smtp_password = "YOUR_SMTP_PASSWORD"  # ⚠️ CAMBIAR
+smtp_username = ""  # Set via TF_VAR_smtp_username
+smtp_password = ""  # Set via TF_VAR_smtp_password
 email_from    = "notification@neumodiagnostics.com"
 
 # ─────────────────────────────────────────────────────────────────────────────

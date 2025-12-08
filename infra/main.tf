@@ -108,6 +108,10 @@ module "service_discovery" {
     "mongodb" = {
       port = 27017
     }
+    # RabbitMQ en ECS (reemplaza Amazon MQ para Free Tier)
+    "rabbitmq" = {
+      port = 5672
+    }
   }
 
   tags = merge(local.common_tags, local.pattern_tags.scenario_2)
@@ -226,28 +230,38 @@ module "mongodb" {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# MÓDULO: Amazon MQ (RabbitMQ)
+# MÓDULO: RabbitMQ en ECS (Alternativa a Amazon MQ para Free Tier)
 # ─────────────────────────────────────────────────────────────────────────────
-module "mq" {
-  source = "./modules/mq"
+# Similar a docker-compose local: usa la imagen oficial de RabbitMQ
+# Costo: ~$5/mes vs ~$40/mes de Amazon MQ
+module "rabbitmq" {
+  source = "./modules/rabbitmq-ecs"
 
-  name_prefix = local.name_prefix
-  broker_name = "message-broker"
-  vpc_id      = module.network.vpc_id
-  subnet_ids  = module.network.private_subnet_ids
-
-  # Security: Usar CIDR en lugar de SG para evitar dependencia circular
+  name_prefix         = local.name_prefix
+  vpc_id              = module.network.vpc_id
+  subnet_ids          = module.network.private_subnet_ids
   allowed_cidr_blocks = module.network.private_subnet_cidrs
 
-  # Instance
-  instance_type   = var.mq_instance_type
-  deployment_mode = var.mq_deployment_mode
+  cluster_id         = module.ecs_cluster.cluster_id
+  execution_role_arn = module.ecs_cluster.task_execution_role_arn
+  task_role_arn      = module.ecs_cluster.task_role_arn
+  log_group_name     = module.ecs_cluster.log_group_name
+  aws_region         = var.aws_region
 
-  # Credentials
-  mq_username = var.mq_username
-  mq_password = var.mq_password
+  # Credentials (same as docker-compose for simplicity)
+  rabbitmq_user     = "guest"
+  rabbitmq_password = "guest"
 
-  tags = local.common_tags
+  cpu    = 256
+  memory = 512
+
+  # Service Discovery para que los servicios lo encuentren
+  service_discovery_arn = module.service_discovery.service_arns["rabbitmq"]
+
+  tags = merge(local.common_tags, {
+    Service = "rabbitmq"
+    Purpose = "Message Broker"
+  })
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -480,8 +494,9 @@ module "ecs_service_message_producer" {
   # Variables de entorno
   environment_variables = [
     {
+      # RabbitMQ en ECS via Cloud Map (como en docker-compose)
       name  = "RABBITMQ_URL"
-      value = module.mq.primary_endpoint
+      value = "amqp://guest:guest@rabbitmq.${local.service_discovery_namespace}:5672/"
     }
   ]
 
@@ -531,8 +546,9 @@ module "ecs_service_notification" {
   # Variables de entorno
   environment_variables = [
     {
+      # RabbitMQ en ECS via Cloud Map (como en docker-compose)
       name  = "RABBITMQ_URL"
-      value = module.mq.primary_endpoint
+      value = "amqp://guest:guest@rabbitmq.${local.service_discovery_namespace}:5672/"
     },
     {
       name  = "SMTP_HOST"

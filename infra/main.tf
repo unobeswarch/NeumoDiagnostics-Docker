@@ -119,7 +119,7 @@ module "service_discovery" {
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MÓDULO: APPLICATION LOAD BALANCER (Público)
-# Escenario 1: Hot Spare - Reemplaza el reverse-proxy de Nginx
+# Solo para web-frontend - punto de entrada desde Internet
 # ─────────────────────────────────────────────────────────────────────────────
 module "alb_public" {
   source = "./modules/alb"
@@ -132,25 +132,9 @@ module "alb_public" {
   redirect_to_https = var.domain_name != ""
   certificate_arn   = var.domain_name != "" ? aws_acm_certificate.main[0].arn : null
 
-  # AWS ALB solo permite 5 path patterns por regla
-  # Usamos wildcards para agrupar rutas similares
+  # Solo web-frontend es público
+  # API Gateway se accede SOLO via ALB interno (Hot Spare)
   target_groups = {
-    "api-gateway" = {
-      port                 = local.services.api_gateway.port
-      health_check_path    = local.services.api_gateway.health_path
-      health_check_matcher = "200"
-      priority             = local.services.api_gateway.priority
-      # Máximo 5 paths: usamos wildcards para cubrir más rutas
-      # /register NO va aquí - la página se sirve desde web-frontend
-      # Las Server Actions (POST /register) van directo por Cloud Map
-      path_patterns        = ["/graphql", "/query", "/auth/*", "/user*", "/prediagnostic/*"]
-      # Rutas cubiertas:
-      #   /graphql, /query - GraphQL
-      #   /auth - Login
-      #   /register - Registro de usuarios
-      #   /user* - userInfo, userImage
-      # Nota: /prediagnostic/* se maneja desde el frontend via GraphQL
-    }
     "web-frontend" = {
       port                 = local.services.web_frontend.port
       health_check_path    = local.services.web_frontend.health_path
@@ -160,7 +144,48 @@ module "alb_public" {
     }
   }
 
-  tags = merge(local.common_tags, local.pattern_tags.scenario_1)
+  tags = merge(local.common_tags, {
+    Purpose = "PublicAccess"
+    Service = "web-frontend"
+  })
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MÓDULO: APPLICATION LOAD BALANCER (Interno)
+# Escenario 1: HOT SPARE - Balanceo entre múltiples instancias de API Gateway
+# Reemplaza el reverse-proxy Nginx de Docker
+# ─────────────────────────────────────────────────────────────────────────────
+module "alb_internal" {
+  source = "./modules/alb"
+
+  name_prefix     = local.name_prefix
+  alb_name        = "internal"
+  vpc_id          = module.network.vpc_id
+  subnet_ids      = module.network.private_subnet_ids  # Subnets PRIVADAS
+  internal        = true  # ALB INTERNO - no expuesto a Internet
+  redirect_to_https = false  # Sin HTTPS interno (tráfico ya en VPC)
+  certificate_arn   = null
+
+  # Solo tráfico desde subnets privadas de la VPC
+  allowed_cidr_blocks = module.network.private_subnet_cidrs
+
+  # API Gateway con Hot Spare pattern
+  # 3 instancias distribuidas reciben tráfico simultáneamente
+  target_groups = {
+    "api-gateway" = {
+      port                 = local.services.api_gateway.port
+      health_check_path    = local.services.api_gateway.health_path
+      health_check_matcher = "200"
+      priority             = 10
+      path_patterns        = ["/*"]  # Todo el tráfico va a api-gateway
+    }
+  }
+
+  tags = merge(local.common_tags, local.pattern_tags.scenario_1, {
+    Purpose = "InternalLoadBalancer"
+    Pattern = "HotSpare"
+    Service = "api-gateway"
+  })
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -272,7 +297,7 @@ module "rabbitmq" {
 
 # ─────────────────────────────────────────────────────────────────────────────
 # API GATEWAY SERVICE
-# Escenario 1: HOT SPARE - 3 tareas activas con ALB
+# Escenario 1: HOT SPARE - 3 tareas activas con ALB INTERNO
 # ─────────────────────────────────────────────────────────────────────────────
 module "ecs_service_api_gateway" {
   source = "./modules/ecs-service"
@@ -291,7 +316,7 @@ module "ecs_service_api_gateway" {
   cpu             = local.services.api_gateway.cpu
   memory          = local.services.api_gateway.memory
 
-  # Escenario 1: HOT SPARE - Múltiples tareas activas
+  # Escenario 1: HOT SPARE - 3 tareas activas procesando en paralelo
   desired_count = local.services.api_gateway.desired_count
 
   # IAM
@@ -301,20 +326,23 @@ module "ecs_service_api_gateway" {
   # Logs
   log_group_name = module.ecs_cluster.log_group_name
 
-  # Load Balancer (para Hot Spare - acceso externo)
-  target_group_arn = module.alb_public.target_group_arns["api-gateway"]
-  alb_listener_arn = module.alb_public.http_listener_arn
-  alb_resource_label = module.alb_public.alb_resource_labels["api-gateway"]
+  # ═══════════════════════════════════════════════════════════════════════════
+  # HOT SPARE: ALB INTERNO distribuye tráfico entre 3 instancias activas
+  # Si una falla, las otras 2 siguen procesando sin interrupción
+  # ═══════════════════════════════════════════════════════════════════════════
+  target_group_arn   = module.alb_internal.target_group_arns["api-gateway"]
+  alb_listener_arn   = module.alb_internal.http_listener_arn
+  alb_resource_label = module.alb_internal.alb_resource_labels["api-gateway"]
   
-  # Permitir tráfico desde ALB (externo) Y desde subnets privadas (interno via Cloud Map)
-  allowed_security_groups = [module.alb_public.security_group_id]
+  # Permitir tráfico desde ALB interno
+  allowed_security_groups = [module.alb_internal.security_group_id]
+  # También desde subnets privadas (otros servicios vía Cloud Map como fallback)
   allowed_cidr_blocks     = module.network.private_subnet_cidrs
 
-  # Service Discovery (para acceso interno desde web-frontend Server Actions)
-  # El API Gateway tiene AMBOS: ALB (externo) y Cloud Map (interno)
+  # Service Discovery (registro en Cloud Map para otros servicios internos)
   service_discovery_arn = module.service_discovery.service_arns["api-gateway"]
 
-  # Variables de entorno
+  # Variables de entorno - API Gateway conecta a otros servicios via Cloud Map
   environment_variables = [
     {
       name  = "AUTH_SERVICE_URL"
@@ -330,7 +358,7 @@ module "ecs_service_api_gateway" {
     }
   ]
 
-  # Auto Scaling
+  # Auto Scaling para Hot Spare
   enable_autoscaling = true
   min_capacity       = local.services.api_gateway.min_capacity
   max_capacity       = local.services.api_gateway.max_capacity
@@ -339,6 +367,7 @@ module "ecs_service_api_gateway" {
   tags = merge(local.common_tags, local.pattern_tags.scenario_1, {
     Service = "api-gateway"
     Pattern = "HotSpare"
+    LoadBalancer = "Internal"
   })
 }
 
@@ -624,15 +653,22 @@ module "ecs_service_web_frontend" {
   environment_variables = [
     {
       # Para Client Components (JavaScript en el navegador)
-      # Usa la URL pública del ALB
+      # Los requests del browser van al ALB público, que sirve web-frontend
+      # Luego Next.js hace Server Actions que llaman al ALB interno
       name  = "NEXT_PUBLIC_API_URL"
       value = "http://${module.alb_public.alb_dns_name}"
     },
     {
-      # Para Server Actions (ejecutan en el servidor de Next.js)
-      # Usa Cloud Map para llamar directamente al API Gateway internamente
+      # ═══════════════════════════════════════════════════════════════════════
+      # DEBUG: Probando con IP directa del api-gateway para descartar DNS
+      # ═══════════════════════════════════════════════════════════════════════
       name  = "SERVER_API_URL"
-      value = "http://api-gateway.${local.service_discovery_namespace}:${local.services.api_gateway.port}"
+      value = "http://10.0.20.15:8080"
+    },
+    {
+      # GraphQL endpoint específico (para Apollo Client en Server Components)
+      name  = "GRAPHQL_ENDPOINT"
+      value = "http://10.0.20.15:8080/graphql"
     },
     {
       name  = "NODE_ENV"

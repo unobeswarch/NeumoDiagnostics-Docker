@@ -34,16 +34,26 @@ output "ecs_cluster_name" {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# LOAD BALANCER
+# LOAD BALANCERS
 # ─────────────────────────────────────────────────────────────────────────────
-output "alb_dns_name" {
-  description = "DNS name del ALB público"
+output "alb_public_dns_name" {
+  description = "DNS name del ALB público (para web-frontend)"
   value       = module.alb_public.alb_dns_name
+}
+
+output "alb_internal_dns_name" {
+  description = "DNS name del ALB interno (para api-gateway - Hot Spare)"
+  value       = module.alb_internal.alb_dns_name
 }
 
 output "application_url" {
   description = "URL de la aplicación"
   value       = var.domain_name != "" ? "https://${var.domain_name}" : "http://${module.alb_public.alb_dns_name}"
+}
+
+output "api_gateway_internal_url" {
+  description = "URL interna del API Gateway (Hot Spare via ALB interno)"
+  value       = "http://${module.alb_internal.alb_dns_name}"
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -113,10 +123,14 @@ output "availability_patterns_summary" {
   description = "Resumen de patrones de disponibilidad implementados"
   value = {
     scenario_1_hot_spare = {
-      description = "API Gateway con 3+ tareas activas"
-      component   = "api-gateway"
-      tasks       = var.api_gateway_desired_count
-      load_balancer = module.alb_public.alb_dns_name
+      description   = "API Gateway con 3+ tareas activas detrás de ALB interno"
+      component     = "api-gateway"
+      tasks         = var.api_gateway_desired_count
+      load_balancer = "ALB Interno: ${module.alb_internal.alb_dns_name}"
+      architecture  = <<-EOT
+        web-frontend → ALB Interno → [api-gateway-1, api-gateway-2, api-gateway-3]
+        Si una instancia falla, ALB detecta via health check y redistribuye tráfico
+      EOT
     }
     scenario_2_service_discovery = {
       description = "Service Discovery vía AWS Cloud Map"

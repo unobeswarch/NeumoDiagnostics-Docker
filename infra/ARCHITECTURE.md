@@ -443,41 +443,86 @@
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                    HOT SPARE - API GATEWAY CLUSTER                          │
 │                                                                             │
-│    ┌─────────────────────────────────────────────────────────┐             │
-│    │                APPLICATION LOAD BALANCER                 │             │
-│    │            (Health checks cada 30s)                      │             │
-│    └──────────────────────┬──────────────────────────────────┘             │
-│                           │                                                  │
-│       ┌───────────────────┼───────────────────┐                             │
-│       │                   │                   │                             │
-│       ▼                   ▼                   ▼                             │
-│  ┌─────────┐        ┌─────────┐        ┌─────────┐                         │
-│  │ API-GW  │        │ API-GW  │        │ API-GW  │                         │
-│  │ Task 1  │        │ Task 2  │        │ Task 3  │                         │
-│  │ (AZ-A)  │        │ (AZ-B)  │        │ (AZ-A)  │                         │
-│  │ ACTIVE  │        │ ACTIVE  │        │ ACTIVE  │                         │
-│  │ ✓       │        │ ✓       │        │ ✓       │                         │
-│  └─────────┘        └─────────┘        └─────────┘                         │
-│                                                                             │
-│  ════════════════════════════════════════════════════════════════════════  │
-│                                                                             │
-│  COMPORTAMIENTO:                                                            │
-│  • Todas las instancias procesan tráfico simultáneamente (Active-Active)   │
-│  • ALB distribuye requests basado en health checks                         │
-│  • Si una tarea falla → ALB la excluye automáticamente                     │
-│  • ECS reemplaza tareas fallidas automáticamente                           │
-│                                                                             │
-│  RECURSOS TERRAFORM:                                                        │
-│  • aws_ecs_service (desired_count = 3)                                     │
-│  • aws_lb_target_group (health_check configurado)                          │
-│  • aws_appautoscaling_target (min=2, max=6)                                │
-└─────────────────────────────────────────────────────────────────────────────┘
+│  ┌────────────────────────────────────────────────────────────────────┐    │
+│  │                     ALB PÚBLICO (Internet-facing)                  │    │
+│  │                                                                    │    │
+│  │     Tráfico externo desde Internet → web-frontend únicamente       │    │
+│  └───────────────────────────────┬────────────────────────────────────┘    │
+│                                  │                                          │
+│                                  ▼                                          │
+│                         ┌────────────────┐                                  │
+│                         │  WEB FRONTEND  │                                  │
+│                         │   (Next.js)    │                                  │
+│                         │   Server Actns │                                  │
+│                         └───────┬────────┘                                  │
+│                                 │                                           │
+│                                 │ Server Actions llaman                     │
+│                                 │ al ALB INTERNO                            │
+│                                 ▼                                           │
+│    ┌────────────────────────────────────────────────────────────────────┐  │
+│    │              ALB INTERNO (reverse-proxy style)                     │  │
+│    │          Reemplaza tu nginx load balancer de Docker                │  │
+│    │            (Health checks cada 30s, en subnets privadas)           │  │
+│    └──────────────────────┬──────────────────────────────────┘          │  │
+│                           │                                              │  │
+│       ┌───────────────────┼───────────────────┐                         │  │
+│       │                   │                   │                         │  │
+│       ▼                   ▼                   ▼                         │  │
+│  ┌─────────┐        ┌─────────┐        ┌─────────┐                     │  │
+│  │ API-GW  │        │ API-GW  │        │ API-GW  │                     │  │
+│  │ Task 1  │        │ Task 2  │        │ Task 3  │                     │  │
+│  │ (AZ-A)  │        │ (AZ-B)  │        │ (AZ-A)  │                     │  │
+│  │ ACTIVE  │        │ ACTIVE  │        │ ACTIVE  │                     │  │
+│  │ ✓       │        │ ✓       │        │ ✓       │                     │  │
+│  └─────────┘        └─────────┘        └─────────┘                     │  │
+│                                                                         │  │
+│  ══════════════════════════════════════════════════════════════════════ │  │
+│                                                                         │  │
+│  ARQUITECTURA (similar a tu docker-compose con nginx):                  │  │
+│  • ALB Interno = nginx reverse-proxy con upstream api_gateway          │  │
+│  • 3 tareas ECS = api-gateway-1, api-gateway-2, api-gateway-3          │  │
+│  • Distribución Active-Active entre todas las instancias                │  │
+│                                                                         │  │
+│  COMPORTAMIENTO:                                                        │  │
+│  • Todas las instancias procesan tráfico simultáneamente               │  │
+│  • ALB distribuye requests basado en health checks                     │  │
+│  • Si una tarea falla → ALB la excluye automáticamente (~30s)          │  │
+│  • ECS reemplaza tareas fallidas automáticamente                       │  │
+│                                                                         │  │
+│  RECURSOS TERRAFORM:                                                    │  │
+│  • module.alb_internal (ALB en subnets privadas)                       │  │
+│  • aws_ecs_service (desired_count = 3)                                 │  │
+│  • aws_lb_target_group (health_check configurado)                      │  │
+│  • aws_appautoscaling_target (min=2, max=6)                            │  │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Implementación Terraform clave:**
 
 ```hcl
-# Escenario 1: Hot Spare para API Gateway
+# ALB INTERNO - Escenario 1: Hot Spare para API Gateway
+# Equivalente a tu nginx reverse-proxy de Docker
+module "alb_internal" {
+  source = "./modules/alb"
+
+  name_prefix = local.name_prefix
+  alb_name    = "internal"
+  vpc_id      = module.network.vpc_id
+  subnet_ids  = module.network.private_subnet_ids  # SUBNETS PRIVADAS
+  internal    = true  # NO expuesto a Internet
+
+  target_groups = {
+    "api-gateway" = {
+      port                 = 8080
+      health_check_path    = "/"
+      health_check_matcher = "200"
+      priority             = 10
+      path_patterns        = ["/*"]
+    }
+  }
+}
+
+# Servicio ECS del API Gateway conectado al ALB interno
 resource "aws_ecs_service" "api_gateway" {
   name            = "api-gateway"
   cluster         = aws_ecs_cluster.main.id
@@ -491,8 +536,9 @@ resource "aws_ecs_service" "api_gateway" {
     security_groups = [aws_security_group.api_gateway.id]
   }
 
+  # Conecta al ALB INTERNO (no público)
   load_balancer {
-    target_group_arn = aws_lb_target_group.api_gateway.arn
+    target_group_arn = module.alb_internal.target_group_arns["api-gateway"]
     container_name   = "api-gateway"
     container_port   = 8080
   }
@@ -504,7 +550,7 @@ resource "aws_ecs_service" "api_gateway" {
   }
 }
 
-# Health checks del ALB
+# Health checks del ALB interno
 resource "aws_lb_target_group" "api_gateway" {
   name        = "api-gateway-tg"
   port        = 8080
@@ -518,7 +564,7 @@ resource "aws_lb_target_group" "api_gateway" {
     unhealthy_threshold = 3
     timeout             = 5
     interval            = 30
-    path                = "/health"
+    path                = "/"
     matcher             = "200"
   }
 }

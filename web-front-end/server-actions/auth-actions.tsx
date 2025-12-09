@@ -21,27 +21,36 @@ function getApiUrl() {
 
 export async function register(userData: any) {
     const apiUrl = getApiUrl()
-    console.log("📝 Register attempt:", { userData, apiUrl })
+    console.log("REGISTER_DEBUG: Starting register with apiUrl:", apiUrl)
+    console.log("REGISTER_DEBUG: userData:", JSON.stringify(userData))
     
     try {
-      console.log(`🔗 Calling: ${apiUrl}/register`)
-      const responseRegister = await fetch(`${apiUrl}/register`, {
+      const url = `${apiUrl}/register`
+      console.log("REGISTER_DEBUG: About to fetch:", url)
+      
+      // Add timeout with AbortController
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      
+      const responseRegister = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
-        cache: "no-store"
+        cache: "no-store",
+        signal: controller.signal
       })
-
-      console.log(`📥 Response status: ${responseRegister.status}`)
+      
+      clearTimeout(timeoutId)
+      console.log("REGISTER_DEBUG: Response received, status:", responseRegister.status)
 
     if (!responseRegister.ok) {
       const errorText = await responseRegister.text()
-      console.error(`❌ Register failed: ${responseRegister.status} - ${errorText}`)
+      console.log("REGISTER_DEBUG: Request failed with status", responseRegister.status, "body:", errorText)
       return false
     }
 
     const registerData = await responseRegister.json()
-    console.log("✅ Register success:", registerData)
+    console.log("REGISTER_DEBUG: Success! Data:", JSON.stringify(registerData))
 
     const newUser = {
       id: registerData.id,
@@ -53,8 +62,8 @@ export async function register(userData: any) {
 
     return true
 
-  } catch (error) {
-    console.error("❌ Error en registro:", error)
+  } catch (error: any) {
+    console.log("REGISTER_DEBUG: CAUGHT ERROR:", error?.name, error?.message, error?.cause)
     return false
   }
 }

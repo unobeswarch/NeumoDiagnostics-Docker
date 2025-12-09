@@ -240,16 +240,25 @@ func (s *AuthService) ValidateJWT(token string, conexion string) (*UserClaims, e
 	fmt.Println("IP token: ", ipToken)
 	fmt.Println("////////////////////////////////////////////")
 
-	if ipToken != ipCliente {
+	// Check if IP validation is disabled (for AWS ECS where internal IPs differ)
+	skipIPValidation := os.Getenv("SKIP_IP_VALIDATION") == "true"
+	
+	if !skipIPValidation && ipToken != ipCliente {
 		fmt.Println("////////////////////////////////////////////")
 		fmt.Println("Las IP's no coinciden")
 		fmt.Println("////////////////////////////////////////////")
 		return nil, fmt.Errorf("token usado desde otra IP")
 	}
 
-	fmt.Println("////////////////////////////////////////////")
-	fmt.Println("Las IP's coinciden")
-	fmt.Println("////////////////////////////////////////////")
+	if skipIPValidation {
+		fmt.Println("////////////////////////////////////////////")
+		fmt.Println("IP validation SKIPPED (SKIP_IP_VALIDATION=true)")
+		fmt.Println("////////////////////////////////////////////")
+	} else {
+		fmt.Println("////////////////////////////////////////////")
+		fmt.Println("Las IP's coinciden")
+		fmt.Println("////////////////////////////////////////////")
+	}
 
 	return &UserClaims{
 		UserID: fmt.Sprintf("%v", claims["id_usuario"]),

@@ -1,0 +1,20 @@
+﻿{
+    "events": [
+        {
+            "logStreamName": "web-frontend/web-frontend/271d3646e5d1445ca1594df2271c5f8b",
+            "timestamp": 1765250308192,
+            "message": "=== AUTH_DEBUG: getApiUrl() returning: http://internal-neumo-dev-internal-1987845174.us-east-1.elb.amazonaws.com",
+            "ingestionTime": 1765250309457,
+            "eventId": "39366397334617446728279790594154250342902475014330515456"
+        },
+        {
+            "logStreamName": "web-frontend/web-frontend/271d3646e5d1445ca1594df2271c5f8b",
+            "timestamp": 1765250308193,
+            "message": "=== AUTH_DEBUG: SERVER_API_URL env var: http://internal-neumo-dev-internal-1987845174.us-east-1.elb.amazonaws.com",
+            "ingestionTime": 1765250309457,
+            "eventId": "39366397334639747473478321217295786061175123375836495873"
+        },
+        {
+            "logStreamName": "web-frontend/web-frontend/271d3646e5d1445ca1594df2271c5f8b",
+            "timestamp": 1765250308234,
+            "message": 

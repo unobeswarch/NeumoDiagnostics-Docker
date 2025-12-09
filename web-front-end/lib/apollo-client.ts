@@ -3,18 +3,18 @@
 
 // Use environment variable for API URL, fallback to localhost for development
 const getGraphQLUrl = () => {
-  // Client-side: use public env var
+  // Client-side: use public env var (goes through /api/graphql proxy)
   if (typeof window !== 'undefined') {
     return process.env.NEXT_PUBLIC_API_URL 
-      ? `${process.env.NEXT_PUBLIC_API_URL}/graphql`
-      : 'http://localhost:8080/graphql';
+      ? `${process.env.NEXT_PUBLIC_API_URL}/query`
+      : '/api/graphql';  // Use local proxy for client-side
   }
-  // Server-side: use internal service URL or public URL
+  // Server-side: use internal service URL with /query endpoint (api-gateway uses /query)
   return process.env.SERVER_API_URL 
-    ? `${process.env.SERVER_API_URL}/graphql`
+    ? `${process.env.SERVER_API_URL}/query`
     : process.env.NEXT_PUBLIC_API_URL 
-      ? `${process.env.NEXT_PUBLIC_API_URL}/graphql`
-      : 'http://localhost:8080/graphql';
+      ? `${process.env.NEXT_PUBLIC_API_URL}/query`
+      : 'http://localhost:8080/query';
 };
 
 export class GraphQLClient {

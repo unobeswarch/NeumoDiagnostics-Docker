@@ -147,16 +147,36 @@ export default async function PatientDashboard() {
   }
 
   let records: RadiographyRecord[] = []
+  
+  console.log("========================================")
+  console.log("=== PATIENT DASHBOARD: Fetching cases ===")
+  console.log("========================================")
+  console.log("=== PATIENT DASHBOARD: Token available:", token ? "YES" : "NO")
+  console.log("=== PATIENT DASHBOARD: Token prefix:", token ? token.substring(0, 30) + "..." : "N/A")
+  
   try {
+    console.log("=== PATIENT DASHBOARD: Calling GraphQLClient.query...")
     const response = await GraphQLClient.query(GET_PATIENT_CASES, undefined, token)
+    console.log("=== PATIENT DASHBOARD: GraphQL response:", JSON.stringify(response))
+    console.log("=== PATIENT DASHBOARD: getCases exists:", !!response?.getCases)
+    console.log("=== PATIENT DASHBOARD: getCases length:", response?.getCases?.length || 0)
+    
     if (response?.getCases) {
+      console.log("=== PATIENT DASHBOARD: Raw cases data:", JSON.stringify(response.getCases))
       records = response.getCases.map((c: any) => convertCaseToRecord(c))
+      console.log("=== PATIENT DASHBOARD: Converted records:", records.length)
+    } else {
+      console.log("=== PATIENT DASHBOARD: No getCases in response")
     }
-  } catch (err) {
-    console.error("Error fetching patient cases (SSR):", err)
+  } catch (err: any) {
+    console.error("=== PATIENT DASHBOARD: ERROR fetching cases ===")
+    console.error("=== PATIENT DASHBOARD: Error message:", err?.message)
+    console.error("=== PATIENT DASHBOARD: Error stack:", err?.stack)
+    console.error("=== PATIENT DASHBOARD: Full error:", err)
   }
 
-
+  console.log("=== PATIENT DASHBOARD: Final records count:", records.length)
+  console.log("========================================")
 
   return (
     <PatientDashboardClient

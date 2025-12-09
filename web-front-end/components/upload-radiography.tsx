@@ -55,9 +55,11 @@ export function UploadRadiography({ onUploadSuccess }: UploadRadiographyProps) {
     setIsUploading(true)
 
     const size = selectedFile.size / 1024 / 1024
-    console.log(size)
+    console.log("=== UPLOAD: File size (MB):", size)
     if (size > 10) {
       alert("El tamano de la imagen excede el limite")
+      setIsUploading(false)
+      return
     }
 
     try {
@@ -76,16 +78,26 @@ export function UploadRadiography({ onUploadSuccess }: UploadRadiographyProps) {
       formData.append("map", JSON.stringify({ "0": ["variables.file"] }))
       formData.append("0", selectedFile)
 
+      console.log("=== UPLOAD: Calling UploadRadiographyImage...")
       const response = await UploadRadiographyImage(formData)
+      console.log("=== UPLOAD: Response received:", JSON.stringify(response))
 
       if (response.data?.uploadImage) {
         alert("Tu radiografia ha sido subida")
+        onUploadSuccess(response.data.uploadImage)
+      } else if (response.errors) {
+        console.error("=== UPLOAD: GraphQL errors:", response.errors)
+        alert(`Error: ${response.errors[0]?.message || "Error desconocido"}`)
+      } else {
+        console.error("=== UPLOAD: Unexpected response:", response)
+        alert("Esta radiografia no pudo ser subida")
       }
-    } catch (error) {
-      alert("La imagen no pudo ser subida")
+    } catch (error: any) {
+      console.error("=== UPLOAD: Exception:", error)
+      alert(`La imagen no pudo ser subida: ${error?.message || "Error de conexión"}`)
     }
-      setSelectedFile(null)
-      setIsUploading(false)
+    setSelectedFile(null)
+    setIsUploading(false)
   }
 
   return (

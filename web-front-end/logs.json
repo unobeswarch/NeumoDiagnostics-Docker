@@ -1,0 +1,174 @@
+﻿{
+    "events": [
+        {
+            "logStreamName": "mongodb/mongodb/91513c6f66594e84be5a01eb6eb3c807",
+            "timestamp": 1765249082415,
+            "message": "{\"t\":{\"$date\":\"2025-12-09T02:58:02.415+00:00\"},\"s\":\"I\",  \"c\":\"WTCHKPT\",  \"id\":22430,   \"ctx\":\"Checkpointer\",\"msg\":\"WiredTiger message\",\"attr\":{\"message\":{\"ts_sec\":1765249082,\"ts_usec\":415233,\"thread\":\"1:0x7f47e37fc640\",\"session_name\":\"WT_SESSION.checkpoint\",\"category\":\"WT_VERB_CHECKPOINT_PROGRESS\",\"category_id\":6,\"verbose_level\":\"DEBUG\",\"verbose_level_id\":1,\"msg\":\"saving checkpoint snapshot min: 1406, snapshot max: 1406 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1\"}}}",
+            "ingestionTime": 1765249085761,
+            "eventId": "39366369998876899509008146552568487833242662961211965440"
+        },
+        {
+            "logStreamName": "mongodb/mongodb/91513c6f66594e84be5a01eb6eb3c807",
+            "timestamp": 1765249142431,
+            "message": "{\"t\":{\"$date\":\"2025-12-09T02:59:02.431+00:00\"},\"s\":\"I\",  \"c\":\"WTCHKPT\",  \"id\":22430,   \"ctx\":\"Checkpointer\",\"msg\":\"WiredTiger message\",\"attr\":{\"message\":{\"ts_sec\":1765249142,\"ts_usec\":431276,\"thread\":\"1:0x7f47e37fc640\",\"session_name\":\"WT_SESSION.checkpoint\",\"category\":\"WT_VERB_CHECKPOINT_PROGRESS\",\"category_id\":6,\"verbose_level\":\"DEBUG\",\"verbose_level_id\":1,\"msg\":\"saving checkpoint snapshot min: 1408, snapshot max: 1408 snapshot count: 0, oldest timestamp: (0, 0) , meta checkpoint timestamp: (0, 0) base write gen: 1\"}}}",
+            "ingestionTime": 1765249145765,
+            "eventId": "39366371337278423344022025087516343894652651344048947200"
+        },
+        {
+            "logStreamName": "web-frontend/web-frontend/271d3646e5d1445ca1594df2271c5f8b",
+            "timestamp": 1765249153894,
+            "message": "LOGIN_DEBUG: Attempting login for: persona4@gmail.com",
+            "ingestionTime": 1765249154454,
+            "eventId": "39366371592911865554778558169444767430344468868426563584"
+        },
+        {
+            "logStreamName": "web-frontend/web-frontend/271d3646e5d1445ca1594df2271c5f8b",
+            "timestamp": 1765249153896,
+            "message": "=== AUTH_DEBUG: getApiUrl() returning: http://internal-neumo-dev-internal-1987845174.us-east-1.elb.amazonaws.com",
+            "ingestionTime": 1765249154454,
+            "eventId": "39366371592956467045175619415727838866889765591438524417"
+        },
+        {
+            "logStreamName": "web-frontend/web-frontend/271d3646e5d1445ca1594df2271c5f8b",
+            "timestamp": 1765249153896,
+            "message": "=== AUTH_DEBUG: SERVER_API_URL env var: http://internal-neumo-dev-internal-1987845174.us-east-1.elb.amazonaws.com",
+            "ingestionTime": 1765249154454,
+            "eventId": "39366371592956467045175619415727838866889765591438524418"
+        },
+        {
+            "logStreamName": "web-frontend/web-frontend/271d3646e5d1445ca1594df2271c5f8b",
+            "timestamp": 1765249153896,
+            "message": "LOGIN_DEBUG: API URL: http://internal-neumo-dev-internal-1987845174.us-east-1.elb.amazonaws.com",
+            "ingestionTime": 1765249154454,
+            "eventId": "39366371592956467045175619415727838866889765591438524419"
+        },
+        {
+            "logStreamName": "auth-be/auth-be/d78d379681904931927e53ab59ab78d1",
+            "timestamp": 1765249154008,
+            "message": "////////////////////////////////////////////",
+            "ingestionTime": 1765249158011,
+            "eventId": "39366371595454150507411049211879793367928514760961753088"
+        },
+        {
+            "logStreamName": "auth-be/auth-be/d78d379681904931927e53ab59ab78d1",
+            "timestamp": 1765249154008,
+            "message": "Direccion ip:  179.32.2.26, 10.0.10.31",
+            "ingestionTime": 1765249158011,
+            "eventId": "39366371595454150507411049211879793367928514760961753089"
+        },
+        {
+            "logStreamName": "auth-be/auth-be/d78d379681904931927e53ab59ab78d1",
+            "timestamp": 1765249154008,
+            "message": "////////////////////////////////////////////",
+            "ingestionTime": 1765249158011,
+            "eventId": "39366371595454150507411049211879793367928514760961753090"
+        },
+        {
+            "logStreamName": "auth-be/auth-be/d78d379681904931927e53ab59ab78d1",
+            "timestamp": 1765249154031,
+            "message": "////////////////////////////////////////////",
+            "ingestionTime": 1765249158011,
+            "eventId": "39366371595967067646977253544135114888199427075599302659"
+        },
+        {
+            "logStreamName": "auth-be/auth-be/d78d379681904931927e53ab59ab78d1",
+            "timestamp": 1765249154031,
+            "message": "IP del cliente  179.32.2.26",
+            "ingestionTime": 1765249158011,
+            "eventId": "39366371595967067646977253544135114888199427075599302660"
+        },
+        {
+            "logStreamName": "auth-be/auth-be/d78d379681904931927e53ab59ab78d1",
+            "timestamp": 1765249154031,
+            "message": "////////////////////////////////////////////",
+            "ingestionTime": 1765249158011,
+            "eventId": "39366371595967067646977253544135114888199427075599302661"
+        },
+        {
+            "logStreamName": "web-frontend/web-frontend/271d3646e5d1445ca1594df2271c5f8b",
+            "timestamp": 1765249154264,
+            "message": "LOGIN_DEBUG: Response status: 200",
+            "ingestionTime": 1765249154454,
+            "eventId": "39366371601163141278234888731812983191224362625639317508"
+        },
+        {
+            "logStreamName": "web-frontend/web-frontend/271d3646e5d1445ca1594df2271c5f8b",
+            "timestamp": 1765249154267,
+            "message": "LOGIN_DEBUG: Login successful, setting cookies",
+            "ingestionTime": 1765249154454,
+            "eventId": "39366371601230043513830480601237590346042307710157258757"
+        },
+        {
+            "logStreamName": "web-frontend/web-frontend/271d3646e5d1445ca1594df2271c5f8b",
+            "timestamp": 1765249154270,
+            "message": "LOGIN_DEBUG: Error during login: NEXT_REDIRECT",
+            "ingestionTime": 1765249154454,
+            "eventId": "39366371601296945749426072470662197500860252794675200006"
+        },
+        {
+            "logStreamName": "web-frontend/web-frontend/271d3646e5d1445ca1594df2271c5f8b",
+            "timestamp": 1765249154595,
+            "message": "=== AUTH_DEBUG: getApiUrl() returning: http://internal-neumo-dev-internal-1987845174.us-east-1.elb.amazonaws.com",
+            "ingestionTime": 1765249159435,
+            "eventId": "39366371608544687938948524997682923483519112676458037248"
+        },
+        {
+            "logStreamName": "web-frontend/web-frontend/271d3646e5d1445ca1594df2271c5f8b",
+            "timestamp": 1765249154595,
+            "message": "=== AUTH_DEBUG: SERVER_API_URL env var: http://internal-neumo-dev-internal-1987845174.us-east-1.elb.amazonaws.com",
+            "ingestionTime": 1765249159435,
+            "eventId": "39366371608544687938948524997682923483519112676458037249"
+        },
+        {
+            "logStreamName": "auth-be/auth-be/d78d379681904931927e53ab59ab78d1",
+            "timestamp": 1765249154599,
+            "message": "////////////////////////////////////////////",
+            "ingestionTime": 1765249158011,
+            "eventId": "39366371608633890919742647488527402867063696410996178950"
+        },
+        {
+            "logStreamName": "auth-be/auth-be/d78d379681904931927e53ab59ab78d1",
+            "timestamp": 1765249154599,
+            "message": "IP cliente:  179.32.2.26",
+            "ingestionTime": 1765249158011,
+            "eventId": "39366371608633890919742647488527402867063696410996178951"
+        },
+        {
+            "logStreamName": "auth-be/auth-be/d78d379681904931927e53ab59ab78d1",
+            "timestamp": 1765249154599,
+            "message": "IP token:  179.32.2.26",
+            "ingestionTime": 1765249158011,
+            "eventId": "39366371608633890919742647488527402867063696410996178952"
+        },
+        {
+            "logStreamName": "auth-be/auth-be/d78d379681904931927e53ab59ab78d1",
+            "timestamp": 1765249154599,
+            "message": "////////////////////////////////////////////",
+            "ingestionTime": 1765249158011,
+            "eventId": "39366371608633890919742647488527402867063696410996178953"
+        },
+        {
+            "logStreamName": "auth-be/auth-be/d78d379681904931927e53ab59ab78d1",
+            "timestamp": 1765249154599,
+            "message": "////////////////////////////////////////////",
+            "ingestionTime": 1765249158011,
+            "eventId": "39366371608633890919742647488527402867063696410996178954"
+        },
+        {
+            "logStreamName": "auth-be/auth-be/d78d379681904931927e53ab59ab78d1",
+            "timestamp": 1765249154599,
+            "message": "Las IP's coinciden",
+            "ingestionTime": 1765249158011,
+            "eventId": "39366371608633890919742647488527402867063696410996178955"
+        },
+        {
+            "logStreamName": "auth-be/auth-be/d78d379681904931927e53ab59ab78d1",
+            "timestamp": 1765249154599,
+            "message": "////////////////////////////////////////////",
+            "ingestionTime": 1765249158011,
+            "eventId": "39366371608633890919742647488527402867063696410996178956"
+        },
+        {
+            "logStreamName": "web-frontend/web-frontend/271d3646e5d1445ca1594df2271c5f8b",
+            "timestamp": 1765249154796,
+            "message": 

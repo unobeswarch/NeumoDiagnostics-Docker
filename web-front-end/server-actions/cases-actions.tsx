@@ -160,36 +160,47 @@ export async function sendDiagnostic(prediagnosticId: string, diagnostic: Diagno
 }
 
 export async function UploadRadiographyImage(formData: FormData) {
+  console.log("=== UPLOAD_RADIOGRAPHY: Starting upload...")
+  
   const current_user = await getUserFromToken();
+  console.log("=== UPLOAD_RADIOGRAPHY: current_user:", current_user ? "exists" : "null")
+  
   const cookieStore = cookies();
   const token = cookieStore.get("auth-token")?.value;
+  console.log("=== UPLOAD_RADIOGRAPHY: token:", token ? `${token.substring(0, 20)}...` : "null")
   
   if (!current_user) {
+    console.log("=== UPLOAD_RADIOGRAPHY: No user, redirecting to login")
     redirect("/login");
   }
 
   const h = headers()
-  
-    const realIp = h.get("x-real-ip") || h.get("x-forwarded-for") || null
-    
-    const userAgent = h.get("user-agent") || ""
+  const realIp = h.get("x-real-ip") || h.get("x-forwarded-for") || null
+  const userAgent = h.get("user-agent") || ""
+
+  const apiUrl = getApiUrl()
+  console.log("=== UPLOAD_RADIOGRAPHY: API URL:", apiUrl)
 
   try {
-    const response = await fetch(`${getApiUrl()}/query`, {
+    console.log("=== UPLOAD_RADIOGRAPHY: Sending POST to:", `${apiUrl}/query`)
+    const response = await fetch(`${apiUrl}/query`, {
       method: "POST",
       body: formData,
       headers: {
-      "Authorization": `Bearer ${token}`,
-      "X-Real-IP": realIp || "",
-      "X-Forwarded-For": realIp || "",
-      "User-Agent": userAgent,
-    },
+        "Authorization": `Bearer ${token}`,
+        "X-Real-IP": realIp || "",
+        "X-Forwarded-For": realIp || "",
+        "User-Agent": userAgent,
+      },
     })
+    
+    console.log("=== UPLOAD_RADIOGRAPHY: Response status:", response.status)
     const result = await response.json()
+    console.log("=== UPLOAD_RADIOGRAPHY: Response body:", JSON.stringify(result))
     return result
     
-  } catch (error) {
-    console.error('Error al subir la radiografia:', error);
+  } catch (error: any) {
+    console.error('=== UPLOAD_RADIOGRAPHY: Error:', error?.message || error);
     throw new Error('No se pudo subir la radiografia. Verifica tu conexión.');
   }
   

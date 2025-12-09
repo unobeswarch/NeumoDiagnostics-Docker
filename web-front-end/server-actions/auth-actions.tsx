@@ -16,21 +16,47 @@ import { headers } from "next/headers"
 // API URL for server-side requests (Cloud Map in AWS, reverse-proxy in docker-compose)
 // Using a function to ensure runtime evaluation
 function getApiUrl() {
-  return process.env.SERVER_API_URL || "http://reverse-proxy"
+  const url = process.env.SERVER_API_URL || "http://reverse-proxy"
+  console.log("=== AUTH_DEBUG: getApiUrl() returning:", url)
+  console.log("=== AUTH_DEBUG: SERVER_API_URL env var:", process.env.SERVER_API_URL || "(not set)")
+  return url
+}
+
+// Determine if cookies should be secure (HTTPS only)
+// In AWS with HTTP ALB, we need to set this to false
+function shouldUseSecureCookies(): boolean {
+  // Explicit override via env var takes precedence
+  if (process.env.USE_SECURE_COOKIES === 'false') return false;
+  if (process.env.USE_SECURE_COOKIES === 'true') return true;
+  // Default: secure in production unless using HTTP
+  const serverUrl = process.env.SERVER_API_URL || '';
+  if (serverUrl.startsWith('http://')) return false;
+  return process.env.NODE_ENV === 'production';
 }
 
 export async function register(userData: any) {
+    console.log("========================================")
+    console.log("=== REGISTER START ===")
+    console.log("========================================")
+    
     const apiUrl = getApiUrl()
-    console.log("REGISTER_DEBUG: Starting register with apiUrl:", apiUrl)
-    console.log("REGISTER_DEBUG: userData:", JSON.stringify(userData))
+    console.log("=== REGISTER: API URL:", apiUrl)
+    console.log("=== REGISTER: User data:", JSON.stringify(userData, null, 2))
     
     try {
       const url = `${apiUrl}/register`
-      console.log("REGISTER_DEBUG: About to fetch:", url)
+      console.log("=== REGISTER: Fetching URL:", url)
+      console.log("=== REGISTER: Request body:", JSON.stringify(userData))
       
       // Add timeout with AbortController
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      const timeoutId = setTimeout(() => {
+        console.log("=== REGISTER: TIMEOUT after 10 seconds!")
+        controller.abort()
+      }, 10000)
+      
+      console.log("=== REGISTER: Sending POST request...")
+      const startTime = Date.now()
       
       const responseRegister = await fetch(url, {
         method: "POST",
@@ -41,29 +67,40 @@ export async function register(userData: any) {
       })
       
       clearTimeout(timeoutId)
-      console.log("REGISTER_DEBUG: Response received, status:", responseRegister.status)
+      const elapsed = Date.now() - startTime
+      console.log("=== REGISTER: Response received in", elapsed, "ms")
+      console.log("=== REGISTER: Response status:", responseRegister.status)
+      console.log("=== REGISTER: Response statusText:", responseRegister.statusText)
+      console.log("=== REGISTER: Response headers:", JSON.stringify(Object.fromEntries(responseRegister.headers.entries())))
 
     if (!responseRegister.ok) {
       const errorText = await responseRegister.text()
-      console.log("REGISTER_DEBUG: Request failed with status", responseRegister.status, "body:", errorText)
+      console.log("=== REGISTER: FAILED! Status:", responseRegister.status)
+      console.log("=== REGISTER: Error body:", errorText)
+      console.log("========================================")
+      console.log("=== REGISTER END (FAILURE) ===")
+      console.log("========================================")
       return false
     }
 
     const registerData = await responseRegister.json()
-    console.log("REGISTER_DEBUG: Success! Data:", JSON.stringify(registerData))
-
-    const newUser = {
-      id: registerData.id,
-      name: registerData.nombre_completo,
-      email: registerData.correo,
-      role: registerData.rol,
-      avatar: registerData.rol === "paciente" ? "/patient-avatar.png" : "/doctor-avatar.png",
-    }
+    console.log("=== REGISTER: SUCCESS! Response data:", JSON.stringify(registerData, null, 2))
+    console.log("========================================")
+    console.log("=== REGISTER END (SUCCESS) ===")
+    console.log("========================================")
 
     return true
 
   } catch (error: any) {
-    console.log("REGISTER_DEBUG: CAUGHT ERROR:", error?.name, error?.message, error?.cause)
+    console.log("========================================")
+    console.log("=== REGISTER EXCEPTION ===")
+    console.log("=== Error name:", error?.name)
+    console.log("=== Error message:", error?.message)
+    console.log("=== Error cause:", error?.cause)
+    console.log("=== Error stack:", error?.stack)
+    console.log("========================================")
+    console.log("=== REGISTER END (EXCEPTION) ===")
+    console.log("========================================")
     return false
   }
 }
@@ -72,8 +109,7 @@ export async function login(formData: FormData): Promise<void> {
   const correo = formData.get("email") as string
   const contrasena = formData.get("password") as string
 
-  console.log(correo)
-  console.log(contrasena)
+  console.log("LOGIN_DEBUG: Attempting login for:", correo)
 
   const h = headers()
 
@@ -81,53 +117,67 @@ export async function login(formData: FormData): Promise<void> {
   
   const userAgent = h.get("user-agent") || ""
 
-  const response = await fetch(`${getApiUrl()}/auth`, {
-    method: "POST",
-    headers: { 
-      "Content-Type": "application/json",
-      "X-Real-IP": realIp || "",
-      "X-Forwarded-For": realIp || "",
-      "User-Agent": userAgent,
-    },
-    body: JSON.stringify({ correo, contrasena }),
-    cache: "no-store"
-  })
+  const apiUrl = getApiUrl()
+  console.log("LOGIN_DEBUG: API URL:", apiUrl)
 
-  if (!response.ok) {
-    throw new Error("Credenciales incorrectas")
+  try {
+    const response = await fetch(`${apiUrl}/auth`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "X-Real-IP": realIp || "",
+        "X-Forwarded-For": realIp || "",
+        "User-Agent": userAgent,
+      },
+      body: JSON.stringify({ correo, contrasena }),
+      cache: "no-store"
+    })
+
+    console.log("LOGIN_DEBUG: Response status:", response.status)
+
+    if (!response.ok) {
+      console.log("LOGIN_DEBUG: Login failed with status:", response.status)
+      // Redirect to login page with error parameter instead of throwing
+      redirect("/login?error=invalid_credentials")
+    }
+
+    const data = await response.json()
+
+    console.log("LOGIN_DEBUG: Login successful, setting cookies")
+
+    cookies().set("auth-token", data.token, { 
+      path: "/",
+      httpOnly: true,
+      secure: shouldUseSecureCookies(),
+      sameSite: "lax",
+    })
+    
+    cookies().set("user-role", data.rol, { 
+      path: "/",
+      httpOnly: true,
+      secure: shouldUseSecureCookies(),
+      sameSite: "lax",
+    })
+
+    cookies().set("user-id", data.user_id, { 
+      path: "/",
+      httpOnly: true,
+      secure: shouldUseSecureCookies(),
+      sameSite: "lax",
+    })
+
+    if (data.rol === "paciente") redirect("/patient/dashboard")
+    if (data.rol === "doctor") redirect("/doctor/dashboard")
+    
+  } catch (error: any) {
+    console.log("LOGIN_DEBUG: Error during login:", error?.message)
+    // If it's a redirect, let it through
+    if (error?.digest?.includes("NEXT_REDIRECT")) {
+      throw error
+    }
+    // Otherwise redirect to login with error
+    redirect("/login?error=connection_error")
   }
-
-  const data = await response.json()
-
-  console.log(data)
-
-  console.log(data.token)
-  console.log(data.rol)
-  console.log(data.user_id)
-
-  cookies().set("auth-token", data.token, { 
-    path: "/",
-    httpOnly: true,
-    secure: true,
-    sameSite: "strict",
-   })
-   
-  cookies().set("user-role", data.rol, { 
-    path: "/",
-    httpOnly: true,
-    secure: true,
-    sameSite: "strict",
-   })
-
-  cookies().set("user-id", data.user_id, { 
-    path: "/",
-    httpOnly: true,
-    secure: true,
-    sameSite: "strict",
-   })
-
-  if (data.rol === "paciente") redirect("/patient/dashboard")
-  if (data.rol === "doctor") redirect("/doctor/dashboard")
 }
 
 export async function logout(): Promise<void> {

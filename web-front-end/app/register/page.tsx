@@ -8,10 +8,19 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { register } from "@/server-actions/auth-actions"
 
-export default async function RegisterPage() {
+export default async function RegisterPage({ searchParams }: { searchParams: { error?: string } }) {
+  const errorMessage = searchParams.error === "registration_failed" 
+    ? "Error al crear la cuenta. Por favor, verifica tus datos e intenta de nuevo."
+    : searchParams.error === "connection_error"
+    ? "Error de conexión con el servidor. Por favor, intenta de nuevo."
+    : null;
 
   async function handleRegister(formData: FormData) {
     "use server"
+    console.log("========================================")
+    console.log("=== HANDLE_REGISTER START ===")
+    console.log("========================================")
+    
     const userData = {
       nombre_completo: formData.get("name"),
       edad: Number(formData.get("age")),
@@ -22,10 +31,19 @@ export default async function RegisterPage() {
       acepta_tratamiento_datos: true,
     }
 
+    console.log("=== HANDLE_REGISTER: Extracted form data:", JSON.stringify(userData, null, 2))
+    console.log("=== HANDLE_REGISTER: Calling register()...")
+    
     const success = await register(userData)
+    
+    console.log("=== HANDLE_REGISTER: register() returned:", success)
 
     if (success) {
-      redirect("/login")
+      console.log("=== HANDLE_REGISTER: Redirecting to /login?registered=true")
+      redirect("/login?registered=true")
+    } else {
+      console.log("=== HANDLE_REGISTER: Redirecting to /register?error=registration_failed")
+      redirect("/register?error=registration_failed")
     }
   }
 
@@ -47,6 +65,11 @@ export default async function RegisterPage() {
             <CardTitle className="text-card-foreground">Registro</CardTitle>
           </CardHeader>
           <CardContent>
+            {errorMessage && (
+              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                {errorMessage}
+              </div>
+            )}
             <form action={handleRegister} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName" className="text-card-foreground">

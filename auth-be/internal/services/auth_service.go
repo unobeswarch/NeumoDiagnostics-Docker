@@ -25,6 +25,16 @@ var (
 	ErrTratamientoDatos = errors.New("BUSINESS_RULE_VIOLATION")
 )
 
+// getDBConnectionString returns the database connection string
+// Uses DATABASE_URL env var for AWS, falls back to docker-compose default
+func getDBConnectionString() string {
+	if url := os.Getenv("DATABASE_URL"); url != "" {
+		return url
+	}
+	// Default for docker-compose local development
+	return "host=auth-db port=5432 user=postgres password=123 dbname=auth_db sslmode=disable"
+}
+
 type AuthService struct {
 	Key []byte
 }
@@ -46,11 +56,7 @@ func RegistrarUsuario(u models.User) (int, time.Time, error) {
 		return 0, time.Time{}, ErrTratamientoDatos
 	}
 
-	db, err := sql.Open("postgres", "host=auth-db port=5432 user=postgres password=123 dbname=auth_db sslmode=disable")
-	// Si falla, probar con URL encoding (línea comentada abajo)
-	// db, err := sql.Open("postgres", "postgres://postgres:BDatosPost0912%2B@auth-db:5432/auth_db?sslmode=disable")
-	// Original password (comentada):
-	// db, err := sql.Open("postgres", "postgres://postgres:123@auth-db:5432/auth_db?sslmode=disable")
+	db, err := sql.Open("postgres", getDBConnectionString())
 	if err != nil {
 		return 0, time.Time{}, err
 	}
@@ -106,10 +112,7 @@ func getClientIP(direcciones string) string {
 }
 
 func IniciarSesion(correo string, contrasena string, conexion string) (string, int, string, string, string, error) {
-	// db, err := sql.Open("postgres", "postgres://postgres:BDatosPost0912%2B@auth-db:5432/auth_db?sslmode=disable")
-	db, err := sql.Open("postgres", "host=auth-db port=5432 user=postgres password=123 dbname=auth_db sslmode=disable")
-	// Original:
-	// db, err := sql.Open("postgres", "postgres://postgres:123@auth-db:5432/auth_db?sslmode=disable")
+	db, err := sql.Open("postgres", getDBConnectionString())
 	if err != nil {
 		return "", 0, "", "", "", err
 	}
@@ -172,12 +175,7 @@ func NewAuthService() *AuthService {
 
 // UserExists verifica si el usuario existe en la base de datos relacional
 func (s *AuthService) UserExists(ctx context.Context, userID string) (bool, error) {
-	// Intentar primera con connection string sin URL encoding
-	db, err := sql.Open("postgres", "host=auth-db port=5432 user=postgres password=123 dbname=auth_db sslmode=disable")
-	// Si falla, probar con URL encoding (línea comentada abajo)
-	// db, err := sql.Open("postgres", "postgres://postgres:BDatosPost0912%2B@auth-db:5432/auth_db?sslmode=disable")
-	// Original password (comentada):
-	// db, err := sql.Open("postgres", "postgres://postgres:123@auth-db:5432/auth_db?sslmode=disable")
+	db, err := sql.Open("postgres", getDBConnectionString())
 	if err != nil {
 		return false, err
 	}
@@ -263,8 +261,7 @@ func (s *AuthService) ValidateJWT(token string, conexion string) (*UserClaims, e
 }
 
 func (s *AuthService) GuardarFoto(ctx context.Context, authHeader string, file multipart.File, fileHeader *multipart.FileHeader, conexion string) (string, error) {
-	// db, err := sql.Open("postgres", "postgres://postgres:BDatosPost0912%2B@auth-db:5432/auth_db?sslmode=disable")
-	db, err := sql.Open("postgres", "postgres://postgres:123@auth-db:5432/auth_db?sslmode=disable")
+	db, err := sql.Open("postgres", getDBConnectionString())
 	if err != nil {
 		return "", err
 	}
@@ -317,8 +314,7 @@ func (s *AuthService) GuardarFoto(ctx context.Context, authHeader string, file m
 }
 
 func (s *AuthService) RetornarFoto(ctx context.Context, userID string) (string, error) {
-	// db, err := sql.Open("postgres", "postgres://postgres:BDatosPost0912%2B@auth-db:5432/auth_db?sslmode=disable")
-	db, err := sql.Open("postgres", "host=auth-db port=5432 user=postgres password=123 dbname=auth_db sslmode=disable")
+	db, err := sql.Open("postgres", getDBConnectionString())
 	if err != nil {
 		return "", err
 	}
@@ -337,8 +333,7 @@ func (s *AuthService) RetornarFoto(ctx context.Context, userID string) (string, 
 }
 
 func (s *AuthService) RetornarUsuario(ctx context.Context, authHeader string, conexion string) (string, string, string, error) {
-	db, err := sql.Open("postgres", "host=auth-db port=5432 user=postgres password=123 dbname=auth_db sslmode=disable")
-	// db, err := sql.Open("postgres", "postgres://postgres:BDatosPost0912%2B@auth-db:5432/auth_db?sslmode=disable")
+	db, err := sql.Open("postgres", getDBConnectionString())
 	if err != nil {
 		return "", "", "", err
 	}
@@ -375,9 +370,7 @@ func (s *AuthService) RetornarUsuario(ctx context.Context, authHeader string, co
 
 // Agregar este método completo en auth_service.go (reemplazando el incompleto)
 func (s *AuthService) GetUserInfo(ctx context.Context, userID string) (*models.UserInfoResponse, error) {
-	// Conexión directa como en las otras funciones
-	db, err := sql.Open("postgres", "host=auth-db port=5432 user=postgres password=123 dbname=auth_db sslmode=disable")
-	// db, err := sql.Open("postgres", "postgres://postgres:BDatosPost0912%2B@auth-db:5432/auth_db?sslmode=disable")
+	db, err := sql.Open("postgres", getDBConnectionString())
 	if err != nil {
 		return nil, fmt.Errorf("error conectando a la base de datos: %w", err)
 	}

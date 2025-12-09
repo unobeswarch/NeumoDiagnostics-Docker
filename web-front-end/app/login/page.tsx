@@ -7,7 +7,16 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { login } from "@/server-actions/auth-actions"
 
-export default function LoginPage() {
+export default function LoginPage({ searchParams }: { searchParams: { error?: string, registered?: string } }) {
+  const errorMessage = searchParams.error === "invalid_credentials" 
+    ? "Credenciales incorrectas. Por favor, verifica tu correo y contraseña."
+    : searchParams.error === "connection_error"
+    ? "Error de conexión. Por favor, intenta de nuevo."
+    : null;
+  
+  const successMessage = searchParams.registered === "true"
+    ? "¡Cuenta creada exitosamente! Ahora puedes iniciar sesión."
+    : null;
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
@@ -28,6 +37,16 @@ export default function LoginPage() {
             <CardTitle className="text-card-foreground">Inicio de sesion</CardTitle>
           </CardHeader>
           <CardContent>
+            {successMessage && (
+              <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+                {successMessage}
+              </div>
+            )}
+            {errorMessage && (
+              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                {errorMessage}
+              </div>
+            )}
             <form action={login} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-card-foreground">

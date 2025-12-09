@@ -82,13 +82,13 @@ prediagnostic_be_memory        = 1024  # 1 GB
 prediagnostic_min_capacity     = 2
 prediagnostic_max_capacity     = 4
 
-# NOTIFICATION BACKEND (Worker)
-notification_be_desired_count = 1
+# NOTIFICATION BACKEND (Worker) - DISABLED until RabbitMQ fixed
+notification_be_desired_count = 0  # Set to 0 temporarily - RabbitMQ issues
 notification_be_cpu           = 256
 notification_be_memory        = 512
 
-# MESSAGE PRODUCER
-message_producer_desired_count = 1
+# MESSAGE PRODUCER - DISABLED until RabbitMQ fixed
+message_producer_desired_count = 0  # Set to 0 temporarily - RabbitMQ issues
 message_producer_cpu           = 256
 message_producer_memory        = 512
 

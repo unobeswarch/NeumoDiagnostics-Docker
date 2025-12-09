@@ -1,0 +1,56 @@
+{
+    "memory":  "512",
+    "executionRoleArn":  "arn:aws:iam::566115828526:role/neumo-dev-ecs-task-execution",
+    "family":  "neumo-db-init",
+    "networkMode":  "awsvpc",
+    "requiresCompatibilities":  [
+                                    "FARGATE"
+                                ],
+    "containerDefinitions":  [
+                                 {
+                                     "name":  "db-init",
+                                     "logConfiguration":  {
+                                                              "logDriver":  "awslogs",
+                                                              "options":  {
+                                                                              "awslogs-region":  "us-east-1",
+                                                                              "awslogs-stream-prefix":  "db-init",
+                                                                              "awslogs-group":  "/ecs/neumo-dev"
+                                                                          }
+                                                          },
+                                     "environment":  [
+                                                         {
+                                                             "value":  "neumo-dev-auth-db.cgl0ou8kgi9a.us-east-1.rds.amazonaws.com",
+                                                             "name":  "PGHOST"
+                                                         },
+                                                         {
+                                                             "value":  "5432",
+                                                             "name":  "PGPORT"
+                                                         },
+                                                         {
+                                                             "value":  "postgres",
+                                                             "name":  "PGUSER"
+                                                         },
+                                                         {
+                                                             "value":  "NeumoDbPass2024",
+                                                             "name":  "PGPASSWORD"
+                                                         },
+                                                         {
+                                                             "value":  "auth_db",
+                                                             "name":  "PGDATABASE"
+                                                         },
+                                                         {
+                                                             "value":  "require",
+                                                             "name":  "PGSSLMODE"
+                                                         }
+                                                     ],
+                                     "essential":  true,
+                                     "command":  [
+                                                     "psql",
+                                                     "-c",
+                                                     "CREATE TABLE IF NOT EXISTS usuarios (id SERIAL PRIMARY KEY, nombre_completo VARCHAR(255) NOT NULL, edad INT NOT NULL, rol VARCHAR(255) NOT NULL, identificacion VARCHAR(50) UNIQUE NOT NULL, correo VARCHAR(255) UNIQUE NOT NULL, contrasena VARCHAR(255) NOT NULL, acepta_tratamiento_datos BOOLEAN NOT NULL, imagen_url VARCHAR(255), fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP);"
+                                                 ],
+                                     "image":  "postgres:15-alpine"
+                                 }
+                             ],
+    "cpu":  "256"
+}

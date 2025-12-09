@@ -166,8 +166,8 @@ module "alb_internal" {
   redirect_to_https = false  # Sin HTTPS interno (tráfico ya en VPC)
   certificate_arn   = null
 
-  # Solo tráfico desde subnets privadas de la VPC
-  allowed_cidr_blocks = module.network.private_subnet_cidrs
+  # Allow traffic from entire VPC (all services can reach internal ALB)
+  allowed_cidr_blocks = [var.vpc_cidr]
 
   # API Gateway con Hot Spare pattern
   # 3 instancias distribuidas reciben tráfico simultáneamente
@@ -281,6 +281,9 @@ module "rabbitmq" {
 
   cpu    = 256
   memory = 512
+  
+  # TEMPORARILY DISABLED - Docker Hub rate limits causing failures
+  desired_count = 0
 
   # Service Discovery para que los servicios lo encuentren
   service_discovery_arn = module.service_discovery.service_arns["rabbitmq"]
@@ -408,8 +411,10 @@ module "ecs_service_auth_be" {
   # Variables de entorno
   environment_variables = [
     {
+      # DATABASE_URL uses key-value format compatible with Go's lib/pq driver
+      # RDS endpoint includes port (e.g., host.rds.amazonaws.com:5432)
       name  = "DATABASE_URL"
-      value = "postgres://${var.db_username}:${var.db_password}@${module.rds.endpoint}/${var.db_name}"
+      value = "host=${module.rds.address} port=${module.rds.port} user=${var.db_username} password=${var.db_password} dbname=${var.db_name} sslmode=require"
     }
   ]
 
@@ -659,16 +664,15 @@ module "ecs_service_web_frontend" {
       value = "http://${module.alb_public.alb_dns_name}"
     },
     {
-      # ═══════════════════════════════════════════════════════════════════════
-      # DEBUG: Probando con IP directa del api-gateway para descartar DNS
-      # ═══════════════════════════════════════════════════════════════════════
+      # Server-side API calls go through Internal ALB (Hot Spare pattern)
+      # This is the AWS equivalent of reverse-proxy in docker-compose
       name  = "SERVER_API_URL"
-      value = "http://10.0.20.15:8080"
+      value = "http://${module.alb_internal.alb_dns_name}"
     },
     {
-      # GraphQL endpoint específico (para Apollo Client en Server Components)
+      # GraphQL endpoint for Server Components via Internal ALB
       name  = "GRAPHQL_ENDPOINT"
-      value = "http://10.0.20.15:8080/graphql"
+      value = "http://${module.alb_internal.alb_dns_name}/graphql"
     },
     {
       name  = "NODE_ENV"

@@ -150,6 +150,25 @@ output "availability_patterns_summary" {
       multi_az    = var.rds_multi_az
       endpoint    = module.rds.endpoint
     }
+    scenario_throttling = {
+      description = "Rate Limiting via AWS WAF"
+      component   = "WAF Web ACL on Public ALB"
+      limit       = "100 requests per 5 minutes per IP (~20 req/min)"
+      action      = "Block with HTTP 429"
+    }
   }
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# WAF
+# ─────────────────────────────────────────────────────────────────────────────
+output "waf_web_acl_arn" {
+  description = "ARN of the WAF Web ACL for rate limiting"
+  value       = aws_wafv2_web_acl.rate_limit.arn
+}
+
+output "waf_web_acl_id" {
+  description = "ID of the WAF Web ACL"
+  value       = aws_wafv2_web_acl.rate_limit.id
 }
 

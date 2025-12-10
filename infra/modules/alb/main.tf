@@ -164,6 +164,10 @@ resource "aws_lb_target_group" "services" {
   # Deregistration delay (tiempo para drenar conexiones)
   deregistration_delay = var.deregistration_delay
 
+  # Load balancing algorithm - Scenario 1: Weighted Round-Robin
+  # weighted_random distribuye el tráfico de forma ponderada entre targets
+  load_balancing_algorithm_type = lookup(each.value, "load_balancing_algorithm", "weighted_random")
+
   # Stickiness (opcional, para sesiones)
   dynamic "stickiness" {
     for_each = each.value.stickiness_enabled ? [1] : []

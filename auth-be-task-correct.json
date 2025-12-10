@@ -1,0 +1,55 @@
+{
+    "containerDefinitions": [
+        {
+            "name": "auth-be",
+            "image": "566115828526.dkr.ecr.us-east-1.amazonaws.com/neumo/auth-be:latest",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "containerPort": 8081,
+                    "hostPort": 8081,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "DATABASE_URL",
+                    "value": "host=neumo-dev-auth-db.cgl0ou8kgi9a.us-east-1.rds.amazonaws.com port=5432 user=postgres password=NeumoDbPass2024 dbname=auth_db sslmode=require"
+                },
+                {
+                    "name": "SKIP_IP_VALIDATION",
+                    "value": "true"
+                }
+            ],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "secrets": [],
+            "ulimits": [
+                {
+                    "name": "nofile",
+                    "softLimit": 65536,
+                    "hardLimit": 65536
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/neumo-dev",
+                    "awslogs-region": "us-east-1",
+                    "awslogs-stream-prefix": "auth-be"
+                }
+            },
+            "systemControls": []
+        }
+    ],
+    "family": "neumo-dev-auth-be",
+    "taskRoleArn": "arn:aws:iam::566115828526:role/neumo-dev-ecs-task",
+    "executionRoleArn": "arn:aws:iam::566115828526:role/neumo-dev-ecs-task-execution",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "256",
+    "memory": "512"
+}

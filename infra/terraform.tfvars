@@ -29,8 +29,7 @@ single_nat_gateway = true  # AHORRO: ~$32/mes menos
 # ─────────────────────────────────────────────────────────────────────────────
 db_name     = "auth_db"
 db_username = "postgres"
-# ⚠️ SET VIA ENVIRONMENT: export TF_VAR_db_password="YourSecurePassword"
-# db_password = ""  # Set via TF_VAR_db_password environment variable
+db_password = ""  # ⚠️ In production, use TF_VAR_db_password env var instead
 
 # db.t3.micro es elegible para Free Tier (750 horas/mes gratis por 12 meses)
 rds_instance_class        = "db.t3.micro"
@@ -63,12 +62,13 @@ email_from    = "notification@neumodiagnostics.com"
 # ECS - CONFIGURACIÓN MÍNIMA
 # ─────────────────────────────────────────────────────────────────────────────
 
-# API GATEWAY - Reducido de 3 a 1 tarea (Hot Spare demo con auto-scaling)
-api_gateway_desired_count = 1  # Mínimo, escala automáticamente
+# API GATEWAY - Scenario 1: Load Balancer / Weighted Round-Robin
+# 3 instancias para distribución de carga con algoritmo weighted_random
+api_gateway_desired_count = 3  # 3 instancias para Scenario 1
 api_gateway_cpu           = 256  # 0.25 vCPU
 api_gateway_memory        = 512  # 0.5 GB
-api_gateway_min_capacity  = 1
-api_gateway_max_capacity  = 3   # Puede escalar hasta 3 si hay carga
+api_gateway_min_capacity  = 3  # Mínimo 3 instancias siempre
+api_gateway_max_capacity  = 5   # Puede escalar hasta 5 si hay carga
 
 # AUTH BACKEND - Mínimo
 auth_be_desired_count = 1

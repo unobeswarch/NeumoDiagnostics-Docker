@@ -1,0 +1,44 @@
+{
+    "Name": "neumo-dev-rate-limit",
+    "Scope": "REGIONAL",
+    "DefaultAction": {
+        "Allow": {}
+    },
+    "Rules": [
+        {
+            "Name": "RateLimitPerIP",
+            "Priority": 1,
+            "Statement": {
+                "RateBasedStatement": {
+                    "Limit": 100,
+                    "AggregateKeyType": "IP",
+                    "EvaluationWindowSec": 300
+                }
+            },
+            "Action": {
+                "Block": {
+                    "CustomResponse": {
+                        "ResponseCode": 429,
+                        "CustomResponseBodyKey": "TooManyRequests"
+                    }
+                }
+            },
+            "VisibilityConfig": {
+                "SampledRequestsEnabled": true,
+                "CloudWatchMetricsEnabled": true,
+                "MetricName": "RateLimitPerIP"
+            }
+        }
+    ],
+    "VisibilityConfig": {
+        "SampledRequestsEnabled": true,
+        "CloudWatchMetricsEnabled": true,
+        "MetricName": "neumo-dev-rate-limit"
+    },
+    "CustomResponseBodies": {
+        "TooManyRequests": {
+            "ContentType": "APPLICATION_JSON",
+            "Content": "{\"error\":\"Too Many Requests\",\"codigo_error\":\"RATE_LIMIT\",\"mensaje\":\"Has excedido el limite de peticiones por minuto. Por favor espera antes de intentar de nuevo.\"}"
+        }
+    }
+}

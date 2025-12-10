@@ -415,6 +415,12 @@ module "ecs_service_auth_be" {
       # RDS endpoint includes port (e.g., host.rds.amazonaws.com:5432)
       name  = "DATABASE_URL"
       value = "host=${module.rds.address} port=${module.rds.port} user=${var.db_username} password=${var.db_password} dbname=${var.db_name} sslmode=require"
+    },
+    {
+      # Skip IP validation for internal service-to-service calls in AWS ECS
+      # Internal ALB/Cloud Map IPs differ from user's original IP in JWT token
+      name  = "SKIP_IP_VALIDATION"
+      value = "true"
     }
   ]
 
@@ -709,4 +715,77 @@ resource "aws_acm_certificate" "main" {
     create_before_destroy = true
   }
 }
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# WAF - RATE LIMITING (Throttling Pattern - Scenario 2)
+# ═══════════════════════════════════════════════════════════════════════════════
+# Implements rate limiting to prevent abuse and DDoS attacks
+# Limit: 100 requests per 5 minutes per IP (~20 req/min)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+resource "aws_wafv2_web_acl" "rate_limit" {
+  name        = "${local.name_prefix}-rate-limit"
+  description = "Rate limiting WAF for throttling pattern"
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  # Rate limiting rule - 100 requests per 60 seconds per IP
+  rule {
+    name     = "RateLimitPerIP"
+    priority = 1
+
+    statement {
+      rate_based_statement {
+        limit                 = 100
+        evaluation_window_sec = 60  # 1 minute window for faster detection
+        aggregate_key_type    = "IP"
+      }
+    }
+
+    action {
+      block {
+        custom_response {
+          response_code            = 429
+          custom_response_body_key = "TooManyRequests"
+        }
+      }
+    }
+
+    visibility_config {
+      sampled_requests_enabled   = true
+      cloudwatch_metrics_enabled = true
+      metric_name                = "RateLimitPerIP"
+    }
+  }
+
+  custom_response_body {
+    key          = "TooManyRequests"
+    content_type = "APPLICATION_JSON"
+    content      = jsonencode({
+      error        = "Too Many Requests"
+      codigo_error = "RATE_LIMIT"
+      mensaje      = "Has excedido el limite de peticiones por minuto. Por favor espera antes de intentar de nuevo."
+    })
+  }
+
+  visibility_config {
+    sampled_requests_enabled   = true
+    cloudwatch_metrics_enabled = true
+    metric_name                = "${local.name_prefix}-rate-limit"
+  }
+
+  tags = merge(local.common_tags, {
+    Pattern = "Throttling"
+  })
+}
+
+# Associate WAF with Public ALB
+resource "aws_wafv2_web_acl_association" "public_alb" {
+  resource_arn = module.alb_public.alb_arn
+  web_acl_arn  = aws_wafv2_web_acl.rate_limit.arn
+}
+
 

@@ -1,0 +1,36 @@
+﻿{
+  "Name": "neumo-dev-rate-limit",
+  "Scope": "REGIONAL",
+  "DefaultAction": {"Allow": {}},
+  "Description": "Rate limiting for API Gateway",
+  "Rules": [
+    {
+      "Name": "RateLimitPerIP",
+      "Priority": 1,
+      "Statement": {
+        "RateBasedStatement": {
+          "Limit": 100,
+          "EvaluationWindowSec": 60,
+          "AggregateKeyType": "IP"
+        }
+      },
+      "Action": {"Block": {"CustomResponse": {"ResponseCode": 429, "CustomResponseBodyKey": "rate-limit-body"}}},
+      "VisibilityConfig": {
+        "SampledRequestsEnabled": true,
+        "CloudWatchMetricsEnabled": true,
+        "MetricName": "RateLimitPerIP"
+      }
+    }
+  ],
+  "VisibilityConfig": {
+    "SampledRequestsEnabled": true,
+    "CloudWatchMetricsEnabled": true,
+    "MetricName": "neumo-dev-rate-limit"
+  },
+  "CustomResponseBodies": {
+    "rate-limit-body": {
+      "ContentType": "APPLICATION_JSON",
+      "Content": "{\"error\": \"Too many requests. Please wait before trying again.\", \"code\": 429}"
+    }
+  }
+}
